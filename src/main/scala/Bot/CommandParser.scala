@@ -26,8 +26,8 @@ class CommandParser extends RegexParsers {
   def apply(input: String): Unit = parse(
     createPoll | list | delete | start | stop | result, input)
   match {
-    case Success(result, _) => result
-    case _ : NoSuccess => println("No success parse")
+    case Success(result,_) => result
+    case Failure(result, _) => println("Bad command: " + input)
   }
 }
 

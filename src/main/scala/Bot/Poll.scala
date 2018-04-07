@@ -12,10 +12,10 @@ trait PoolTrait {
 
 }
 
-class Poll(name : String, id : Int, anonymity : Boolean = true,
-           continuous_visibility : Boolean = false,
+case class Poll(name : String, id : Int, anonymity : Boolean = true,
+           continuousOrAfterstop : Boolean = false,
            start_time : Date = null,
-           end_time : Date = null) extends PoolTrait {
+           end_time : Date = null){
 
   var active = false
   def start(): Unit = active = true
