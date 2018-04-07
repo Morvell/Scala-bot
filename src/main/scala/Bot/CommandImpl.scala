@@ -8,7 +8,7 @@ import scala.collection.immutable
 object CommandImpl {
 
   private var maxID = 0
-  private var polls = immutable.Map[Int, Poll]()
+  private var polls = immutable.Map[Int, Poll]()  //TODO go to trait repka
   val formatDate = new SimpleDateFormat("hh:mm:ss yy:MM:dd")
 
 
@@ -35,24 +35,24 @@ object CommandImpl {
 
   def deletePoll(id : Int): Unit = { polls.contains(id) match {
     case true => polls = polls - id
-                 maxID -= 1
+                 maxID -= 1 // TODO remove
                  println("Poll deleted successfully")
     case false =>  println("Error: poll is not exist")
   }
 
   }
 
-  def startPoll(id : Int): Unit = { polls.contains(id) match {
-    case true => polls(id).start()
+  def startPoll(id : Int): Unit = { polls.contains(id) match { //TODO polls.get
+    case true => polls(id).start() //TODO time start
       println("The poll is started successfully")
     case false => println("Error : poll is not exist")
   }
   }
 
   def stopPoll(id : Int): Unit = { polls.contains(id) match {
-    case true => polls(id).stop()
+    case true => polls(id).stop() //TODO make check start
       println("The poll is stopped successfully")
-    case false => println("Error: poll is not exist")
+    case false => println("Error: poll is not exist") //TODO remove println
   }
   }
 
