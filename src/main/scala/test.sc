@@ -5,7 +5,9 @@ import scala.collection.immutable
 var polls = immutable.Map[Int,Int]()
 
 polls = polls + (1 -> 1)
-polls = polls + (2 -> 1)
+polls = polls + (2 -> 2)
 
-var a = polls.get(1)
-print(a.isDefined)
+polls.foreach( b => print(b))
+
+polls.get(1)
+

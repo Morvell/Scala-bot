@@ -35,14 +35,19 @@ object CommandImpl {
 
   def deletePoll(id : Int): Unit = { polls.contains(id) match {
     case true => polls = polls - id
-                 maxID -= 1 // TODO remove
                  println("Poll deleted successfully")
     case false =>  println("Error: poll is not exist")
   }
 
   }
 
-  def startPoll(id : Int): Unit = { polls.contains(id) match { //TODO polls.get
+  def startPoll(id : Int): String = {
+    polls.get(id).map { poll =>
+      poll.start
+      "The poll is started successfully"
+    }.getOrElse("Error : poll is not exist")
+
+    polls.contains(id) match { //TODO polls.get
     case true => polls(id).start() //TODO time start
       println("The poll is started successfully")
     case false => println("Error : poll is not exist")
