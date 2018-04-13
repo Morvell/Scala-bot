@@ -7,14 +7,14 @@ class CommandParser extends RegexParsers {
   private val command = CommandImpl
 
   def createPoll: Parser[Unit] = {
-    val pollName = Parser("""\w+""".r) //TODO ()
+    val pollName = Parser("((" ~> """\w+""".r <~"))" | """\w+""".r) //TODO () ACCEPT
     val anonymity = Parser("(" ~> ("yes" | "no") <~ ")")
     val continuous = Parser("(" ~> ("afterstop" | "continuous") <~ ")")
     val startTime = Parser("(" ~> """\d{2}:\d{2}:\d{2} \d{2}:\d{2}:\d{2}""".r <~ ")")
     val stopTime = startTime
     ("/create_poll (" ~> pollName <~ ")") ~ anonymity.? ~ continuous.? ~ startTime.? ~ stopTime.? ^^
-      { s =>  command.createPoll( s._1._1._1._1, s._1._1._1._2, s._1._1._2,
-        s._1._2, s._2)}  //TODO case ~
+      { case name ~ anonym ~ contin ~ start ~ stop  =>  command.createPoll( name, anonym, contin,
+        start, stop)}  //TODO case ~ ACCEPT
   }
 
   def list: Parser[Unit] = """^/list""".r ^^ { _ => command.listPolls() }
@@ -26,7 +26,7 @@ class CommandParser extends RegexParsers {
   def apply(input: String): Unit = parse(
     createPoll | list | delete | start | stop | result, input)
   match {
-    case Success(result,_) => result //TODO experement with Phrase
+    case Success(result,_) => result //TODO experement with Phrase IGNORE
     case Failure(result, _) => println("Bad command: " + input)
   }
 }

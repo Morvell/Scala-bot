@@ -5,12 +5,19 @@ import java.util.Date
 
 import scala.collection.immutable
 
-object CommandImpl {
+trait Repository {
+  var polls: Map[Int, Poll] = immutable.Map[Int, Poll]()   //TODO go to trait repka ACCEPT
+}
+
+object CommandImpl extends Repository {
 
   private var maxID = 0
-  private var polls = immutable.Map[Int, Poll]()  //TODO go to trait repka
   val formatDate = new SimpleDateFormat("hh:mm:ss yy:MM:dd")
 
+
+  def worker(string: String): Unit ={
+    println(string)
+  }
 
   def createPoll(name : String, anonymityVar : Option[String], continuousOrAfterstopVar : Option[String],
                  startTimeVar : Option[String], stopTimeVar : Option[String]): Unit = {
@@ -29,8 +36,7 @@ object CommandImpl {
   }
 
   def listPolls(): Unit = {
-    println("Current polls: ")
-    polls.foreach(x => println(x._1 + ": " + x._2.name))
+    "Current polls: " + polls.foreach(x => println(x._1 + ": " + x._2.name)).toString
   }
 
   def deletePoll(id : Int): Unit = { polls.contains(id) match {
@@ -43,16 +49,12 @@ object CommandImpl {
 
   def startPoll(id : Int): String = {
     polls.get(id).map { poll =>
-      poll.start
+      poll.start()
       "The poll is started successfully"
     }.getOrElse("Error : poll is not exist")
 
-    polls.contains(id) match { //TODO polls.get
-    case true => polls(id).start() //TODO time start
-      println("The poll is started successfully")
-    case false => println("Error : poll is not exist")
   }
-  }
+
 
   def stopPoll(id : Int): Unit = { polls.contains(id) match {
     case true => polls(id).stop() //TODO make check start
