@@ -22,7 +22,7 @@ case class Poll(name : String, id : Int, anonymity : Boolean = true,
   def stop(): Unit = active = false
   def getResult : String = { active && !continuousOrAfterstop match {
     case true => "Can not see before finished"
-    case _ =>  "The poll" + name + "has following result:"
+    case _ =>  "The poll " + name + " has following result: "
   }
   }
 

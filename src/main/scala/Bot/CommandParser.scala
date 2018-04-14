@@ -17,11 +17,11 @@ class CommandParser extends RegexParsers {
         start, stop).toString)}  //TODO case ~ ACCEPT
   }
 
-  def list: Parser[Unit] = """^/list""".r ^^ { _ => command.worker(command.listPolls()) }
-  def delete: Parser[Unit] = "/delete_poll (" ~> """\d+""".r <~ ")" ^^ { d => command.worker(command.deletePoll(d.toInt)) } //TODO separate NEED HELP
-  def start: Parser[Unit] = "/start_poll (" ~> """\d+""".r <~ ")" ^^ { d => command.worker(command.startPoll(d.toInt)) }
-  def stop: Parser[Unit] = "/stop_poll (" ~> """\d+""".r <~ ")" ^^ { d => command.worker(command.stopPoll(d.toInt)) }
-  def result: Parser[Unit] = "/result (" ~> """\d+""".r <~ ")" ^^ { d => command.worker(command.pollResult(d.toInt)) }
+  def list: Parser[Unit] = """^/list""".r ^^ { _ => Matcher.ListM(_) }
+  def delete: Parser[Unit] = "/delete_poll (" ~> """\d+""".r <~ ")" ^^ { _ => Matcher.DeleteM(_) } //TODO separate NEED HELP
+  def start: Parser[Unit] = "/start_poll (" ~> """\d+""".r <~ ")" ^^ { _ => Matcher.StartM(_) }
+  def stop: Parser[Unit] = "/stop_poll (" ~> """\d+""".r <~ ")" ^^ { _ => Matcher.StopM(_) }
+  def result: Parser[Unit] = "/result (" ~> """\d+""".r <~ ")" ^^ { _ => Matcher.ResultM(_) }
 
   def apply(input: String): Unit = parse(
     createPoll | list | delete | start | stop | result, input)

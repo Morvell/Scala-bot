@@ -60,6 +60,7 @@ object CommandImpl extends Repository {
   def stopPoll(id: Int): String = {
 
     polls.get(id).map { poll =>
+
       poll.stop()
       "The poll is stopped successfully"
     }.getOrElse("Error: poll is not exist")
