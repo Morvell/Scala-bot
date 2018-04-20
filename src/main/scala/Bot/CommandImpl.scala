@@ -23,10 +23,14 @@ object CommandImpl extends Repository {
                  startTimeVar: Option[String], stopTimeVar: Option[String]): Int = {
     val anonymity = anonymityVar.getOrElse("yes") == "yes"
     val continuousOrAfterstop = continuousOrAfterstopVar.getOrElse("afterstop") == "continuous"
-
-    val startTime = formatDate.parse(startTimeVar.getOrElse(formatDate.format(new Date)))
-    val stopTime = formatDate.parse(stopTimeVar.getOrElse(formatDate.format(new Date)))
-
+    val startTime = null
+    val stopTime = null
+    if(startTimeVar.isDefined) {
+      val startTime = formatDate.parse(startTimeVar.getOrElse(formatDate.format(new Date)))
+    }
+    if(stopTimeVar.isDefined) {
+      val stopTime = formatDate.parse(stopTimeVar.getOrElse(formatDate.format(new Date)))
+    }
     val id = maxID
 
     maxID += 1
@@ -60,9 +64,10 @@ object CommandImpl extends Repository {
   def stopPoll(id: Int): String = {
 
     polls.get(id).map { poll =>
-
-      poll.stop()
-      "The poll is stopped successfully"
+      if (poll.end_time == null)
+        poll.stop()
+        "The poll is stopped successfully"
+      "The poll is don't stopped. Because end time is set"
     }.getOrElse("Error: poll is not exist")
 
   }
