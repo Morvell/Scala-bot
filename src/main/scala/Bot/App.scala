@@ -20,13 +20,11 @@ object App {
           case c: Matcher.StartM => CommandImpl.startPoll(c.d)
           case c: Matcher.StopM => CommandImpl.stopPoll(c.d)
           case c: Matcher.ResultM => CommandImpl.pollResult(c.d)
-          case c: Matcher.Fail => Failure //TODO
-
       }
 
-      val res = prepared match {
+      prepared match {
         case parser.Success(response, _) => CommandImpl.worker(response.toString)
-        case parser.Failure(error, _) => CommandImpl.worker(s"Error: ${error}")
+        case parser.Failure(error, _) => CommandImpl.worker(s"Error: $error")
       }
 
     }

@@ -3,8 +3,6 @@ package Bot
 import java.text.SimpleDateFormat
 import java.util.Date
 
-import Bot.CommandImpl.stopTime
-
 import scala.collection.immutable
 
 trait Repository {
@@ -70,7 +68,6 @@ object CommandImpl extends Repository {
     id
   }
 
-  //TODO
   def listPolls(): String = {
     get().aggregate("Current polls: \n")((s, p)  => s"$s ${p._1} :   ${p._2.name}\n", _ + _)
   }
@@ -106,11 +103,12 @@ object CommandImpl extends Repository {
   }
 
 
-  def stopPoll(id: Int): String = {
+  def stopPoll(id: Int, now: Date): String = {
+     val now = new Date()
 
     searchOption(id).map { poll =>
 
-      if (!poll.active){
+      if (!poll.active(now)){
         return "Опрос еще не запущен"
       }
       if(poll.end_time == null){

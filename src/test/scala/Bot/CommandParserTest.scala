@@ -8,7 +8,7 @@ class CommandParserTest extends FlatSpec with Matchers{
   private val parser = CommandParser
 
  "/create_poll (my_poll) (no) (afterstop))" should Matcher.CreatePoolM.toString() in {
-   val result = parser("/create_poll (my_poll) (no) (afterstop))")
+   val result = parser("/create_poll (my_poll) (no) (afterstop))") //TODO еще
    result.get shouldBe a [Matcher.CreatePoolM]
  }
 
@@ -50,11 +50,6 @@ class CommandParserTest extends FlatSpec with Matchers{
 
   "/bad_request" should "Fail" in {
     val result = parser("/bad_request")
-    result.get shouldBe a [Matcher.Fail]
+    ???
   }
-
-
-
-
-
 }

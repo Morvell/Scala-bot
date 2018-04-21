@@ -21,9 +21,9 @@ class CommandParser extends RegexParsers {
   def start: Parser[Command] = "/start_poll" ~> "(" ~> """\d+""".r <~ ")" ^^ { d => Matcher.StartM(d.toInt) }
   def stop: Parser[Command] = "/stop_poll" ~> "(" ~> """\d+""".r <~ ")" ^^ { d => Matcher.StopM(d.toInt) }
   def result: Parser[Command] = "/result" ~> "(" ~> """\d+""".r <~ ")" ^^ { d => Matcher.ResultM(d.toInt) }
-  def fail: Parser[Command] = """.*""".r ^^ { d => Matcher.Fail() }
 
-  val rlt = createPoll | list | delete | start | stop | result | fail ^^ {case cmd: Command => cmd;}
+  val rlt = createPoll | list | delete | start | stop | result | failure("Unknown command")
+
 
   def apply(input: String): ParseResult[Command] = parse(rlt, input)
 
