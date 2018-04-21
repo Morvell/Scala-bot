@@ -20,6 +20,7 @@ object App {
           case c: Matcher.StartM => CommandImpl.startPoll(c.d)
           case c: Matcher.StopM => CommandImpl.stopPoll(c.d)
           case c: Matcher.ResultM => CommandImpl.pollResult(c.d)
+          case c: Matcher.Fail => Failure //TODO
 
       }
 

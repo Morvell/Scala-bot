@@ -10,6 +10,7 @@ object Matcher {
   case class StartM(d:Int) extends Command
   case class StopM(d:Int) extends Command
   case class ResultM(d:Int) extends Command
+  case class Fail() extends Command
 
 
 }
