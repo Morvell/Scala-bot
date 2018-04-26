@@ -7,10 +7,10 @@ import scala.collection.immutable
 
 trait Repository {
   private var polls: Map[Int, Poll] = immutable.Map[Int, Poll]()
-  def put(id:Int, poll: Poll) { polls = polls + (id -> poll)}
-  def get(): Map[Int, Poll] = polls
-  def remove(id:Int){polls = polls - id}
-  def clean(){polls = polls.empty}
+  def putInRep(id:Int, poll: Poll) { polls = polls + (id -> poll)}
+  def getRep: Map[Int, Poll] = polls
+  def removeFromRep(id:Int){polls = polls - id}
+  def cleanRep() {polls = polls.empty}
 
   def search(id: Int): Poll = {
     polls(id)
@@ -24,6 +24,7 @@ trait Repository {
 object CommandImpl extends Repository {
 
   private var maxID = 0
+
   val formatDate = new SimpleDateFormat("hh:mm:ss yy:MM:dd")
 
   def removeID(){maxID = 0}
@@ -33,19 +34,24 @@ object CommandImpl extends Repository {
     println(string)
   }
 
-  def startTime(time:Option[String]): Date = {
+  def startTime(time:Option[String]): Option[Date] = {
 
     if (time.isDefined){
-      return formatDate.parse(time.getOrElse(formatDate.format(new Date)))
+      return Option(formatDate.parse(time.getOrElse(formatDate.format(new Date))))
     }
-    null
+
+    None
   }
 
-  def stopTime(time:Option[String]): Date = {
+  def getTimeFromFormat(string: String): Date = {
+    formatDate.parse(string)
+  }
+
+  def stopTime(time:Option[String]): Option[Date] = {
     if (time.isDefined){
-      return formatDate.parse(time.getOrElse(formatDate.format(new Date)))
+      return Option(formatDate.parse(time.getOrElse(formatDate.format(new Date))))
     }
-    null
+    None
   }
 
   def createPoll(name: String, anonymityVar: Option[String], continuousOrAfterstopVar: Option[String],
@@ -62,64 +68,58 @@ object CommandImpl extends Repository {
 
     maxID += 1
 
-    put(id,Poll(name, id, anonymity, continuousOrAfterstop, startTime1, stopTime1))
+    putInRep(id,Poll(name, id, anonymity, continuousOrAfterstop, startTime1, stopTime1))
 
 
     id
   }
 
   def listPolls(): String = {
-    get().aggregate("Current polls: \n")((s, p)  => s"$s ${p._1} :   ${p._2.name}\n", _ + _)
+    getRep.aggregate("Current polls: \n")((s, p)  => s"$s ${p._1} :   ${p._2.name}\n", _ + _)
   }
 
   def deletePoll(id: Int): String = {
 
-    get().get(id).map { (_) =>
-      remove(id)
+    getRep.get(id).map { (_) =>
+      removeFromRep(id)
       "Poll deleted successfully"
     }.getOrElse("Error: poll is not exist")
 
   }
 
-  def startPoll(id: Int): String = {
+  def startPoll(id: Int, date: Date): String = {
     searchOption(id).map { poll =>
 
-      if(poll.active){
+      if(PollCommand.active(poll,date)){
         return "Уже запущен"
       }
 
-      if(poll.start_time == null){
-        poll.start()
+      if(poll.start_time.isDefined) return "Уже запущен"
+
+      if(poll.start_time.isEmpty){
+        putInRep(id, PollCommand.start(poll, date))
         return "The poll is started successfully"
       }
-      if(poll.start_time.before(new Date())) {
-        poll.start()
-        return "The poll is started successfully"
-      } else { return "Error: еще не время"}
-      poll.start()
-      return "The poll is started successfully"
+      return "Error"
+
     }.getOrElse("Error : poll is not exist")
 
   }
 
 
-  def stopPoll(id: Int, now: Date): String = {
-     val now = new Date()
+  def stopPoll(id: Int, date: Date): String = {
 
     searchOption(id).map { poll =>
 
-      if (!poll.active(now)){
+      if (!PollCommand.active(poll, date)){
         return "Опрос еще не запущен"
       }
-      if(poll.end_time == null){
-        poll.stop()
+      if(poll.end_time.isEmpty){
+        putInRep(id, PollCommand.stop(poll, date))
         return "The poll is stopped successfully"
       }
-      if(poll.end_time.before(new Date())) {
-        poll.stop()
-        return "The poll is stopped successfully"
-      } else { return "Error: еще не время"}
-      poll.stop()
+      else { return "Error: опрос остановится автоматически"}
+      putInRep(id, PollCommand.stop(poll, date))
       return "The poll is stopped successfully"
 
     }.getOrElse("Error: poll is not exist")
@@ -128,8 +128,8 @@ object CommandImpl extends Repository {
 
 
   def pollResult(id: Int): String = {
-    get().get(id).map { poll =>
-      search(id).getResult
+    getRep.get(id).map { poll =>
+      PollCommand.getResult(search(id), new Date)
     }.getOrElse("Error: poll is not exist")
   }
 

@@ -4,10 +4,8 @@ import scala.collection.immutable
 
 var polls = immutable.Map[Int,Int]()
 
-polls = polls + (1 -> 1)
-polls = polls + (2 -> 2)
-
-polls.foreach( b => print(b))
+polls += 1 -> 1
+polls += 1 -> 2
 
 polls.get(1)
 
