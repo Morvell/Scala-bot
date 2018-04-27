@@ -63,5 +63,36 @@ class CommandParserTest extends FlatSpec with Matchers{
 
   "/bad_request" should "Fail" in {
     val result = parser("/bad_request")
+    result.successful shouldBe false
   }
+
+
+
+  //////////////////////////////////////////////////////////
+
+  "/begin (1)" should Matcher.BeginM.toString() in {
+    val result = parser("/begin (1)")
+    result.get match { case c: Matcher.BeginM => c.d shouldBe 1}
+    result.get shouldBe a [Matcher.BeginM]
+  }
+
+
+  "/end " should Matcher.EndM.toString() in {
+    val result = parser("/end")
+    result.get shouldBe a [Matcher.EndM]
+  }
+
+
+  "/view " should Matcher.ViewM.toString() in {
+    val result = parser("/view ")
+    result.get shouldBe a [Matcher.ViewM]
+  }
+
+
+  "/delete_question " should Matcher.DeleteQuestionM.toString() in {
+    val result = parser("/delete_question (1)")
+    result.get match { case c: Matcher.DeleteQuestionM => c.d shouldBe 1}
+    result.get shouldBe a [Matcher.DeleteQuestionM]
+  }
+
 }

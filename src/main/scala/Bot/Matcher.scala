@@ -10,6 +10,11 @@ object Matcher {
   case class StartM(d:Int) extends Command
   case class StopM(d:Int) extends Command
   case class ResultM(d:Int) extends Command
+  case class BeginM(d:Int) extends Command
+  case class EndM() extends Command
+  case class ViewM() extends Command
+  case class DeleteQuestionM(d:Int) extends Command
+  case class AnswerM(d:Int, s:String) extends Command
   case class Fail() extends Command{
     def apply(): String = "Bad command"}
 

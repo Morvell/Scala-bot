@@ -117,6 +117,5 @@ class CommandImplTest extends FlatSpec with Matchers with BeforeAndAfterEach {
 
   override protected def afterEach(): Unit = {
     CommandImpl.cleanRep()
-    CommandImpl.removeID()
   }
 }

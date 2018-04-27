@@ -23,11 +23,15 @@ trait Repository {
 
 object CommandImpl extends Repository {
 
-  private var maxID = 0
 
   val formatDate = new SimpleDateFormat("hh:mm:ss yy:MM:dd")
 
-  def removeID(){maxID = 0}
+
+  def getMaxID:Int = {
+    getRep.lastOption.map { d =>
+      d._1+1
+    }.getOrElse(0)
+  }
 
 
   def worker(string: String): Unit = {
@@ -64,9 +68,7 @@ object CommandImpl extends Repository {
 
     val stopTime1 = stopTime(stopTimeVar)
 
-    val id = maxID
-
-    maxID += 1
+    val id = getMaxID
 
     putInRep(id,Poll(name, id, anonymity, continuousOrAfterstop, startTime1, stopTime1))
 

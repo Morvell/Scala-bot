@@ -2,16 +2,6 @@ package Bot
 
 import java.util.Date
 
-trait PoolTrait {
-  val name : String = ""
-  val id : Int = 0
-  val anonymity : Boolean = true
-  val continuousOrAfterstop : Boolean = false
-  val start_time : Date = null
-  val end_time : Date = null
-
-}
-
 case class Poll(name : String, id : Int,
                 anonymity : Boolean = true,
                 continuousOrAfterstop : Boolean = false,
