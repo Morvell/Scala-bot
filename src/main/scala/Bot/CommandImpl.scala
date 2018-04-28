@@ -6,17 +6,27 @@ import java.util.Date
 import scala.collection.immutable
 
 trait Repository {
-  private var polls: Map[Int, Poll] = immutable.Map[Int, Poll]()
-  def putInRep(id:Int, poll: Poll) { polls = polls + (id -> poll)}
+  var polls: Map[Int, Poll] = immutable.Map[Int, Poll]()
+
+  def putInRep(id: Int, poll: Poll) {
+    polls = polls + (id -> poll)
+  }
+
   def getRep: Map[Int, Poll] = polls
-  def removeFromRep(id:Int){polls = polls - id}
-  def cleanRep() {polls = polls.empty}
+
+  def removeFromRep(id: Int) {
+    polls = polls - id
+  }
+
+  def cleanRep() {
+    polls = polls.empty
+  }
 
   def search(id: Int): Poll = {
     polls(id)
   }
 
-  def searchOption(id:Int): Option[Poll] = {
+  def searchOption(id: Int): Option[Poll] = {
     polls.get(id)
   }
 }
@@ -27,9 +37,10 @@ object CommandImpl extends Repository {
   val formatDate = new SimpleDateFormat("hh:mm:ss yy:MM:dd")
 
 
-  def getMaxID:Int = {
+
+  def getMaxID: Int = {
     getRep.lastOption.map { d =>
-      d._1+1
+      d._1 + 1
     }.getOrElse(0)
   }
 
@@ -38,9 +49,9 @@ object CommandImpl extends Repository {
     println(string)
   }
 
-  def startTime(time:Option[String]): Option[Date] = {
+  def startTime(time: Option[String]): Option[Date] = {
 
-    if (time.isDefined){
+    if (time.isDefined) {
       return Option(formatDate.parse(time.getOrElse(formatDate.format(new Date))))
     }
 
@@ -51,8 +62,8 @@ object CommandImpl extends Repository {
     formatDate.parse(string)
   }
 
-  def stopTime(time:Option[String]): Option[Date] = {
-    if (time.isDefined){
+  def stopTime(time: Option[String]): Option[Date] = {
+    if (time.isDefined) {
       return Option(formatDate.parse(time.getOrElse(formatDate.format(new Date))))
     }
     None
@@ -70,14 +81,14 @@ object CommandImpl extends Repository {
 
     val id = getMaxID
 
-    putInRep(id,Poll(name, id, anonymity, continuousOrAfterstop, startTime1, stopTime1))
+    putInRep(id, Poll(name, id, anonymity, continuousOrAfterstop, startTime1, stopTime1))
 
 
     id
   }
 
   def listPolls(): String = {
-    getRep.aggregate("Current polls: \n")((s, p)  => s"$s ${p._1} :   ${p._2.name}\n", _ + _)
+    getRep.aggregate("Current polls: \n")((s, p) => s"$s ${p._1} :   ${p._2.name}\n", _ + _)
   }
 
   def deletePoll(id: Int): String = {
@@ -92,13 +103,13 @@ object CommandImpl extends Repository {
   def startPoll(id: Int, date: Date): String = {
     searchOption(id).map { poll =>
 
-      if(PollCommand.active(poll,date)){
+      if (PollCommand.active(poll, date)) {
         return "Уже запущен"
       }
 
-      if(poll.start_time.isDefined) return "Уже запущен"
+      if (poll.start_time.isDefined) return "Уже запущен"
 
-      if(poll.start_time.isEmpty){
+      if (poll.start_time.isEmpty) {
         putInRep(id, PollCommand.start(poll, date))
         return "The poll is started successfully"
       }
@@ -113,14 +124,16 @@ object CommandImpl extends Repository {
 
     searchOption(id).map { poll =>
 
-      if (!PollCommand.active(poll, date)){
+      if (!PollCommand.active(poll, date)) {
         return "Опрос еще не запущен"
       }
-      if(poll.end_time.isEmpty){
+      if (poll.end_time.isEmpty) {
         putInRep(id, PollCommand.stop(poll, date))
         return "The poll is stopped successfully"
       }
-      else { return "Error: опрос остановится автоматически"}
+      else {
+        return "Error: опрос остановится автоматически"
+      }
       putInRep(id, PollCommand.stop(poll, date))
       return "The poll is stopped successfully"
 
