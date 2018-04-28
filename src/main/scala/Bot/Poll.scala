@@ -28,6 +28,7 @@ object PollCommand {
     if (poll.start_time.isDefined) return poll
     poll.copy(start_time = Option(date))
   }
+
   def stop(poll: Poll, date: Date): Poll = {
     if (poll.end_time.isDefined) return poll
     poll.copy(end_time = Option(date))

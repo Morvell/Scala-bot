@@ -36,12 +36,11 @@ object CommandImpl extends Repository {
 
   val formatDate = new SimpleDateFormat("hh:mm:ss yy:MM:dd")
 
+  val maxId = Stream.from(0).iterator
 
 
   def getMaxID: Int = {
-    getRep.lastOption.map { d =>
-      d._1 + 1
-    }.getOrElse(0)
+    maxId.next()
   }
 
 
