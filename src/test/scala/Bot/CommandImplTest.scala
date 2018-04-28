@@ -15,6 +15,19 @@ class CommandImplTest extends FlatSpec with Matchers with BeforeAndAfterEach {
     r1 should not be r2
   }
 
+
+  "CreatePool" should "return  unic id #2" in {
+    val r1 = CommandImpl.createPoll("test",Option("yes"),Option("test"),Option("13:22:00 18:03:26"),Option("13:22:00 18:03:26"))
+    val r2 = CommandImpl.createPoll("test",Option("yes"),Option("test"),Option("13:22:00 18:03:26"),Option("13:22:00 18:03:26"))
+    val r3 = CommandImpl.createPoll("test",Option("yes"),Option("test"),Option("13:22:00 18:03:26"),Option("13:22:00 18:03:26"))
+    CommandImpl.removeFromRep(r1)
+    val r4 = CommandImpl.createPoll("test",Option("yes"),Option("test"),Option("13:22:00 18:03:26"),Option("13:22:00 18:03:26"))
+    r1 should not be r2
+    r2 should not be r3
+    r3 should not be r4
+    r4 shouldBe 3
+  }
+
   "CreatePool" should "correct Pool" in {
     val r1 = CommandImpl.createPoll("test",Option("yes"),Option("test"),Option(null),Option(null))
     CommandImpl.search(r1).id shouldBe 0
