@@ -16,6 +16,7 @@ object Matcher {
   case class DeleteQuestionM(d:Int) extends Command
   case class AnswerM(d:Int, s:String) extends Command
   case class AddQuestionM(q:String, t:String, variant:List[String]) extends Command
+  case class AnswerStringM(d:Int,a:String) extends Command
   case class Fail() extends Command{
     def apply(): String = "Bad command"}
 

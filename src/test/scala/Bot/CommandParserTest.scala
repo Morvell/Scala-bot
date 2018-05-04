@@ -96,16 +96,28 @@ class CommandParserTest extends FlatSpec with Matchers{
   }
 
   "/add_question multi" should Matcher.AddQuestionM.toString() in {
-    val result = parser(
-      """/add_question (Test) (multi)
+    val result = parser("""/add_question (Test case) (multi)
         |One And A
         |Two""".stripMargin)
     result.get match { case c: Matcher.AddQuestionM =>
-      c.q shouldBe "Test"
+      c.q shouldBe "Test case"
       c.t shouldBe "multi"
+      c.variant.tail.head shouldBe "Two"
     }
     result.get shouldBe a [Matcher.AddQuestionM]
-    result.get match { case c: Matcher.AddQuestionM => c.variant(1) shouldBe "Two"}
+  }
+
+
+  //TODO many tests
+
+
+  "/answer string" should Matcher.AnswerStringM.toString() in {
+    val result = parser("""/answer (1) (multi)""")
+    result.get match { case c: Matcher.AnswerStringM =>
+      c.d shouldBe 1
+      c.a shouldBe "multi"
+    }
+    result.get shouldBe a [Matcher.AnswerStringM]
   }
 
 }

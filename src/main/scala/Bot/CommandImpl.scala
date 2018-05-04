@@ -5,6 +5,9 @@ import java.util.Date
 
 import scala.collection.immutable
 
+
+case class Context(context: Int)
+
 trait Repository {
   var polls: Map[Int, Poll] = immutable.Map[Int, Poll]()
 
@@ -43,7 +46,7 @@ object CommandImpl extends Repository {
     maxId.next()
   }
 
-
+  
   def worker(string: String): Unit = {
     println(string)
   }

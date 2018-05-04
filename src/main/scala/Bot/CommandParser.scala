@@ -23,11 +23,11 @@ class CommandParser extends RegexParsers {
   def list: Parser[Command] = """^/list""".r ^^ { _ => Matcher.ListM() }
 
   def addQuestion: Parser[Command] = {
-    val question = Parser("(" ~> """\w+""".r <~ ")" | """\w+""".r)
-    val questionType = Parser("(" ~> ("open"|"choice"|"multi") <~ ")" | """\w+""".r)
+    val question = Parser("(" ~> """[_a-zA-Zа-яА-ЯёЁ0-9.,:;'"*&!? ]+""".r <~ ")")
+    val questionType = Parser("(" ~> ("open"|"choice"|"multi") <~ ")")
     val variant = Parser(Properties.lineSeparator ~> """.*""".r )
-    val command = Parser("/add_question" ~> "(" ~> question <~ ")" )
-    command ~ questionType ~ rep(variant) ^^ { case a ~ b ~ c => Matcher.AddQuestionM(a, b, c)}
+    val command = Parser("/add_question" ~> question)
+    command~questionType~rep(variant) ^^ { case a~b~c => Matcher.AddQuestionM(a, b, c)}
   }
 
   def delete: Parser[Command] = "/delete_poll" ~> "(" ~>"""\d+""".r <~ ")" ^^ { d => Matcher.DeleteM(d.toInt) } //TODO separate ACCEPT
@@ -45,7 +45,14 @@ class CommandParser extends RegexParsers {
 
   def deleteQuestion: Parser[Command] = "/delete_question" ~> "(" ~> """\d+""".r <~ ")" ^^ { d => Matcher.DeleteQuestionM(d.toInt) }
 
-  val rlt: Parser[Command] = createPoll | list | delete | start | stop | result | begin | end | view | deleteQuestion | addQuestion | failure("Unknown command")
+  def answer: Parser[Command] = {
+    val digit = Parser("(" ~> """\d+""".r <~ ")")
+    val otvet = Parser("(" ~> """[_a-zA-Zа-яА-ЯёЁ0-9.,:;'"*&!? ]+""".r <~ ")")
+    val command = Parser("/answer" ~> digit)
+    command~otvet ^^ { case a~b => Matcher.AnswerStringM(a.toInt, b)}
+  }
+
+  val rlt: Parser[Command] = createPoll | list | delete | start | stop | result | begin | end | view | answer | deleteQuestion | addQuestion | failure("Unknown command")
 
 
   def apply(input: String): ParseResult[Command] = parse(rlt, input)
