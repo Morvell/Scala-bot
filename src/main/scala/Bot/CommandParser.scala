@@ -45,14 +45,14 @@ class CommandParser extends RegexParsers {
 
   def deleteQuestion: Parser[Command] = "/delete_question" ~> "(" ~> """\d+""".r <~ ")" ^^ { d => Matcher.DeleteQuestionM(d.toInt) }
 
-  def answer: Parser[Command] = {
+  def answerOpen: Parser[Command] = {
     val digit = Parser("(" ~> """\d+""".r <~ ")")
     val otvet = Parser("(" ~> """[_a-zA-Zа-яА-ЯёЁ0-9.,:;'"*&!? ]+""".r <~ ")")
     val command = Parser("/answer" ~> digit)
     command~otvet ^^ { case a~b => Matcher.AnswerStringM(a.toInt, b)}
   }
 
-  val rlt: Parser[Command] = createPoll | list | delete | start | stop | result | begin | end | view | answer | deleteQuestion | addQuestion | failure("Unknown command")
+  val rlt: Parser[Command] = createPoll | list | delete | start | stop | result | begin | end | view | answerOpen | deleteQuestion | addQuestion | failure("Unknown command")
 
 
   def apply(input: String): ParseResult[Command] = parse(rlt, input)

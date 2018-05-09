@@ -6,8 +6,6 @@ import java.util.Date
 import scala.collection.immutable
 
 
-case class Context(context: Int)
-
 trait Repository {
   var polls: Map[Int, Poll] = immutable.Map[Int, Poll]()
 
@@ -25,14 +23,16 @@ trait Repository {
     polls = polls.empty
   }
 
-  def search(id: Int): Poll = {
+  def getPollById(id: Int): Poll = {
     polls(id)
   }
 
-  def searchOption(id: Int): Option[Poll] = {
+  def getPoolByIdOption(id: Int): Option[Poll] = {
     polls.get(id)
   }
 }
+
+case class Context(context:Option[Int])
 
 object CommandImpl extends Repository {
 
@@ -41,12 +41,13 @@ object CommandImpl extends Repository {
 
   val maxId = Stream.from(0).iterator
 
+  var context:Option[Int] = None
 
   def getMaxID: Int = {
     maxId.next()
   }
 
-  
+
   def worker(string: String): Unit = {
     println(string)
   }
@@ -103,7 +104,7 @@ object CommandImpl extends Repository {
   }
 
   def startPoll(id: Int, date: Date): String = {
-    searchOption(id).map { poll =>
+    getPoolByIdOption(id).map { poll =>
 
       if (PollCommand.active(poll, date)) {
         return "Уже запущен"
@@ -124,7 +125,7 @@ object CommandImpl extends Repository {
 
   def stopPoll(id: Int, date: Date): String = {
 
-    searchOption(id).map { poll =>
+    getPoolByIdOption(id).map { poll =>
 
       if (!PollCommand.active(poll, date)) {
         return "Опрос еще не запущен"
@@ -146,8 +147,32 @@ object CommandImpl extends Repository {
 
   def pollResult(id: Int): String = {
     getRep.get(id).map { poll =>
-      PollCommand.getResult(search(id), new Date)
+      PollCommand.getResult(getPollById(id), new Date)
     }.getOrElse("Error: poll is not exist")
+  }
+
+  def begin(id: Int): String = {
+    context = Option(id)
+    "Контекст переключен на " + id
+  }
+
+  def end(): String = {
+    context.map { a =>
+      context = None
+      "Контекст отключен"
+    }.getOrElse("Контекст не известен")
+  }
+
+  def view(): String = {
+    context.map { a =>
+      context = None
+      "Красивое представление"      //TODO
+    }.getOrElse("Контекст не известен")
+  }
+
+  def addQuestionOpen(name: String, question:List[String]): String ={
+    question.foreach(q => PollCommand.addQuestionOpen(getPollById(context.getOrElse(return "Контекст не выбран")), name, q))
+    context.get.toString
   }
 
 }

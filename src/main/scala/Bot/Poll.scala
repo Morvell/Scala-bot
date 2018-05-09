@@ -7,10 +7,15 @@ case class Poll(name : String, id : Int,
                 continuousOrAfterstop : Boolean = false,
                 start_time : Option[Date] = None,
                 end_time : Option[Date] = None,
+                question : Map[String,Answer] = Map()
                )
 
 
 object PollCommand {
+
+  def addQuestionOpen(poll: Poll, name:String, q:String): Unit = {
+    poll.copy(question = poll.question + (name -> AnswerOpen(Nil)))
+  }
 
   def active(poll: Poll, date: Date): Boolean = {
     if(poll.start_time.isEmpty) return false
