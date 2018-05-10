@@ -7,14 +7,22 @@ case class Poll(name : String, id : Int,
                 continuousOrAfterstop : Boolean = false,
                 start_time : Option[Date] = None,
                 end_time : Option[Date] = None,
-                question : Map[String,Answer] = Map()
+                questions : List[Question] = List()
                )
 
 
 object PollCommand {
 
-  def addQuestionOpen(poll: Poll, name:String, q:String): Unit = {
-    poll.copy(question = poll.question + (name -> AnswerOpen(Nil)))
+  def addQuestion(poll: Poll, q:Question): Poll = {
+    poll.copy(questions = poll.questions :+ q)
+  }
+
+  def deleteQuestion(poll: Poll, q:Question) : Poll = {
+    poll.copy(questions = poll.questions.filter(_ != q))
+  }
+
+  def deleteQuestionById(poll: Poll, id:Int) : Poll = {
+    deleteQuestion(poll, poll.questions(id))
   }
 
   def active(poll: Poll, date: Date): Boolean = {

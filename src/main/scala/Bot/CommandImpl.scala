@@ -41,10 +41,16 @@ object CommandImpl extends Repository {
 
   val maxId = Stream.from(0).iterator
 
+  val userID = Stream.from(0).iterator //TODO временно
+
   var context:Option[Int] = None
 
   def getMaxID: Int = {
     maxId.next()
+  }
+
+  def getUserID: Int = {
+    userID.next()
   }
 
 
@@ -170,9 +176,42 @@ object CommandImpl extends Repository {
     }.getOrElse("Контекст не известен")
   }
 
-  def addQuestionOpen(name: String, question:List[String]): String ={
-    question.foreach(q => PollCommand.addQuestionOpen(getPollById(context.getOrElse(return "Контекст не выбран")), name, q))
-    context.get.toString
+  def addQuestion(name: String, typeOfQuestion: String, list: List[String]): String = {
+    getPoolByIdOption(context.get).map { poll =>
+
+      val question = Question(name,typeOfQuestion, list.map(e => Variant(e, Nil)))
+      putInRep(context.get,PollCommand.addQuestion(poll, question))
+      "Номер добавленного вопроса: " + poll.questions.size
+
+    }.getOrElse("Error : не выбран контекст")
+  }
+
+  def deleteQuestion(id:Int): String = {
+    getPoolByIdOption(context.get).map { poll =>
+
+      putInRep(context.get, PollCommand.deleteQuestionById(poll,id))
+      "Вопрос удален"
+
+    }.getOrElse("Error : не выбран контекст")
+  }
+
+  def addAnswerOpen(id:Int, answer:String): String = {
+    getPoolByIdOption(context.get).map { poll =>
+
+      PollCommand.addQuestion(poll,QuestionHandler.addAnswer(poll.questions(id), getUserID, User(getUserID, answer)))
+      "Вы проголосовали"
+    }.getOrElse("Error : не выбран контекст")
+  }
+
+
+  def addAnswerChoice(id:Int, list: List[Int]): String = {
+    getPoolByIdOption(context.get).map { poll =>
+
+      list.foreach(i =>
+        PollCommand.addQuestion(poll,QuestionHandler.addAnswer(poll.questions(id), i, User(getUserID, ""))))
+
+      "Вы проголосовали"
+    }.getOrElse("Error : не выбран контекст")
   }
 
 }

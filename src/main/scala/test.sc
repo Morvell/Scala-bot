@@ -1,14 +1,10 @@
-import Bot.Poll
-
-import scala.collection.{immutable, mutable}
+import scala.collection.immutable
 
 
-var polls: immutable.Map[Int, Int] = immutable.Map[Int, Int](1->1)
+var polls: immutable.Map[String, Int] = immutable.Map[String, Int]("One"->1)
 
 
-val a = polls(1)
 
-polls = polls + (1 -> (a + 1))
 
 
 
