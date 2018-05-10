@@ -1,7 +1,7 @@
 package Bot
 
 
-case class Question(name: String, typeOfQuestion: String, var variants: List[Variant])
+case class Question(name: String, typeOfQuestion: String, variants: List[Variant])
 
 case class User(id:Int,answer:String)
 
@@ -18,8 +18,7 @@ object QuestionHandler {
   }
 
   def addAnswer(question: Question, id:Int, answer: User): Question = {
-    question.variants(id) = question.variants(id).copy(answers = answer :: question.variants(id).answers)
-    question
+    question.copy(variants = question.variants.updated(id, question.variants(id).copy(answers = answer :: question.variants(id).answers)))
   }
 
 }

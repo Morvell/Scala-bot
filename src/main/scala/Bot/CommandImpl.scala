@@ -170,10 +170,10 @@ object CommandImpl extends Repository {
   }
 
   def view(): String = {
-    context.map { a =>
-      context = None
-      "Красивое представление"      //TODO
-    }.getOrElse("Контекст не известен")
+    getPoolByIdOption(context.get).map { poll =>
+      poll.toString
+
+    }.getOrElse("Error : не выбран контекст")
   }
 
   def addQuestion(name: String, typeOfQuestion: String, list: List[String]): String = {
