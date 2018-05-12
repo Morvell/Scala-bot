@@ -79,8 +79,8 @@ object CommandImpl extends Repository {
     None
   }
 
-  def checkRoot(poll: Poll):Boolean = {
-    poll.admin == getUserID
+  def checkRoot(poll: Poll, id:Int):Boolean = {
+    poll.admin == id
   }
 
   def createPoll(name: String, anonymityVar: Option[String], continuousOrAfterstopVar: Option[String],
@@ -105,18 +105,19 @@ object CommandImpl extends Repository {
     getRep.aggregate("Current polls: \n")((s, p) => s"$s ${p._1} :   ${p._2.name}\n", _ + _)
   }
 
-  def deletePoll(id: Int): String = {
+  def deletePoll(id: Int, userIDE: Int): String = {
 
-    getRep.get(id).map { (_) =>
+    getRep.get(id).map { poll =>
+      if (!checkRoot(poll, userIDE)) return "У тебя здесь нет прав"
       removeFromRep(id)
       "Poll deleted successfully"
     }.getOrElse("Error: poll is not exist")
 
   }
 
-  def startPoll(id: Int, date: Date): String = {
+  def startPoll(id: Int, date: Date, userIDE:Int): String = {
     getPoolByIdOption(id).map { poll =>
-
+      if (!checkRoot(poll, userIDE)) return "У тебя здесь нет прав"
       if (PollCommand.active(poll, date)) {
         return "Уже запущен"
       }
@@ -134,10 +135,10 @@ object CommandImpl extends Repository {
   }
 
 
-  def stopPoll(id: Int, date: Date): String = {
+  def stopPoll(id: Int, date: Date, userIDE:Int): String = {
 
     getPoolByIdOption(id).map { poll =>
-
+      if (!checkRoot(poll, userIDE)) return "У тебя здесь нет прав"
       if (!PollCommand.active(poll, date)) {
         return "Опрос еще не запущен"
       }
@@ -181,9 +182,9 @@ object CommandImpl extends Repository {
     }.getOrElse("Error : не выбран контекст")
   }
 
-  def addQuestion(name: String, typeOfQuestion: String, list: List[String]): String = {
+  def addQuestion(name: String, typeOfQuestion: String, list: List[String], userIDE:Int): String = {
     getPoolByIdOption(context.get).map { poll =>
-
+      if (!checkRoot(poll, userIDE)) return "У тебя здесь нет прав"
       val question = Question(name,typeOfQuestion, HashSet[User](),list.map(e => Variant(e, Nil)))
       putInRep(context.get,PollCommand.addQuestion(poll, question))
       "Номер добавленного вопроса: " + poll.questions.size
@@ -191,9 +192,9 @@ object CommandImpl extends Repository {
     }.getOrElse("Error : не выбран контекст")
   }
 
-  def deleteQuestion(id:Int): String = {
+  def deleteQuestion(id:Int, userIDE:Int): String = {
     getPoolByIdOption(context.get).map { poll =>
-
+      if (!checkRoot(poll, userIDE)) return "У тебя здесь нет прав"
       putInRep(context.get, PollCommand.deleteQuestionById(poll,id))
       "Вопрос удален"
 
