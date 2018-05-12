@@ -18,7 +18,8 @@ object QuestionHandler {
   }
 
   def addAnswer(question: Question, id:Int, answer: User): Question = {
-    question.copy(variants = question.variants.updated(id, question.variants(id).copy(answers = answer :: question.variants(id).answers)))
+    val a = question.variants(id).copy(answers = answer :: question.variants(id).answers)
+    question.copy(variants = question.variants.updated(id, a))
   }
 
 }

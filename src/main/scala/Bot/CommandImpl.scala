@@ -198,20 +198,25 @@ object CommandImpl extends Repository {
   def addAnswerOpen(id:Int, answer:String): String = {
     getPoolByIdOption(context.get).map { poll =>
 
-      PollCommand.addQuestion(poll,QuestionHandler.addAnswer(poll.questions(id), getUserID, User(getUserID, answer)))
+      putInRep(context.get, PollCommand.updateQuestion(poll,id,QuestionHandler.addAnswer(poll.questions(id), getUserID, User(getUserID, answer))))
       "Вы проголосовали"
     }.getOrElse("Error : не выбран контекст")
   }
 
 
   def addAnswerChoice(id:Int, list: List[Int]): String = {
-    getPoolByIdOption(context.get).map { poll =>
 
-      list.foreach(i =>
-        PollCommand.addQuestion(poll,QuestionHandler.addAnswer(poll.questions(id), i, User(getUserID, ""))))
-
+    context.map(cont => {
+      for(i <- list) yield {
+        val poll = getPoolByIdOption(id).get
+        val b = QuestionHandler.addAnswer(poll.questions(id), i, User(getUserID, ""))
+        val a = PollCommand.updateQuestion(poll, id, b)
+        putInRep(cont, a)
+      }
       "Вы проголосовали"
-    }.getOrElse("Error : не выбран контекст")
+    }).getOrElse("Нет контекста")
+
   }
+
 
 }

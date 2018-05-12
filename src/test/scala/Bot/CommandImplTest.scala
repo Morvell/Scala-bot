@@ -144,7 +144,7 @@ class CommandImplTest extends FlatSpec with Matchers with BeforeAndAfterEach {
     val r2 = CommandImpl.createPoll("test",Option("yes"),Option("test"),Option("13:22:00 18:02:18"),Option("13:22:00 18:03:99"))
     CommandImpl.context = Option(r2)
     CommandImpl.addQuestion("Тестовый вопрос?", "multi","1"::"2"::"3"::Nil)
-    CommandImpl.addAnswerChoice(0, 1::2::Nil)
+    CommandImpl.addAnswerChoice(0, 0::1::Nil)
     var a = CommandImpl.getPollById(r2).questions
     var b = a
   }
