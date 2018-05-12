@@ -79,6 +79,10 @@ object CommandImpl extends Repository {
     None
   }
 
+  def checkRoot(poll: Poll):Boolean = {
+    poll.admin == getUserID
+  }
+
   def createPoll(name: String, anonymityVar: Option[String], continuousOrAfterstopVar: Option[String],
                  startTimeVar: Option[String], stopTimeVar: Option[String]): Int = {
     val anonymity = anonymityVar.getOrElse("yes") == "yes"

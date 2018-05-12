@@ -16,6 +16,13 @@ object App {
       case c: Matcher.StartM => CommandImpl.startPoll(c.d, new Date())
       case c: Matcher.StopM => CommandImpl.stopPoll(c.d, new Date())
       case c: Matcher.ResultM => CommandImpl.pollResult(c.d)
+      case c: Matcher.BeginM => CommandImpl.begin(c.d)
+      case c: Matcher.EndM => CommandImpl.end()
+      case c: Matcher.AddQuestionOpenM => CommandImpl.addQuestion(c.q,c.t,"open"::Nil)
+      case c: Matcher.AddQuestionChoiceM => CommandImpl.addQuestion(c.q,c.t,c.variant)
+      case c: Matcher.DeleteQuestionM => CommandImpl.deleteQuestion(c.d)
+      case c: Matcher.AnswerStringM => CommandImpl.addAnswerOpen(c.d,c.a)
+      case c: Matcher.AnswerDigitM => CommandImpl.addAnswerChoice(c.d,c.a)
     } match {
       case CommandParser.Success(response, _) => response.toString
       case CommandParser.Failure(error, _) => s"Error: $error"
