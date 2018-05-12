@@ -3,7 +3,8 @@ package Bot
 import java.text.SimpleDateFormat
 import java.util.Date
 
-import scala.collection.immutable
+import scala.collection.immutable.HashSet
+import scala.collection.{immutable, mutable}
 
 
 trait Repository {
@@ -90,7 +91,7 @@ object CommandImpl extends Repository {
 
     val id = getMaxID
 
-    putInRep(id, Poll(name, id, anonymity, continuousOrAfterstop, startTime1, stopTime1))
+    putInRep(id, Poll(name,getUserID, id, anonymity, continuousOrAfterstop, startTime1, stopTime1))
 
 
     id
@@ -179,7 +180,7 @@ object CommandImpl extends Repository {
   def addQuestion(name: String, typeOfQuestion: String, list: List[String]): String = {
     getPoolByIdOption(context.get).map { poll =>
 
-      val question = Question(name,typeOfQuestion, list.map(e => Variant(e, Nil)))
+      val question = Question(name,typeOfQuestion, HashSet[User](),list.map(e => Variant(e, Nil)))
       putInRep(context.get,PollCommand.addQuestion(poll, question))
       "Номер добавленного вопроса: " + poll.questions.size
 
@@ -196,20 +197,27 @@ object CommandImpl extends Repository {
   }
 
   def addAnswerOpen(id:Int, answer:String): String = {
-    getPoolByIdOption(context.get).map { poll =>
+    val l_userId = getUserID
 
-      putInRep(context.get, PollCommand.updateQuestion(poll,id,QuestionHandler.addAnswer(poll.questions(id), getUserID, User(getUserID, answer))))
+    context.map(cont => {
+      val poll = getPoolByIdOption(cont).get
+      val b = QuestionHandler.addAnswer(poll.questions(id),poll.anonymity,  0, Answer(answer,Option(User(l_userId))))
+      val a = PollCommand.updateQuestion(poll, id, b)
+      putInRep(cont, a)
       "Вы проголосовали"
-    }.getOrElse("Error : не выбран контекст")
+
+    }).getOrElse("Нет контекста")
   }
 
 
   def addAnswerChoice(id:Int, list: List[Int]): String = {
 
+    val l_userId = getUserID
+
     context.map(cont => {
       for(i <- list) yield {
-        val poll = getPoolByIdOption(id).get
-        val b = QuestionHandler.addAnswer(poll.questions(id), i, User(getUserID, ""))
+        val poll = getPoolByIdOption(cont).get
+        val b = QuestionHandler.addAnswer(poll.questions(id),poll.anonymity,  i, Answer("",Option(User(l_userId))))
         val a = PollCommand.updateQuestion(poll, id, b)
         putInRep(cont, a)
       }

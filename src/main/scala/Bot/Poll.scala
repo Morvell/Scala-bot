@@ -3,11 +3,12 @@ package Bot
 import java.util.Date
 
 case class Poll(name : String, id : Int,
+                admin : Int,
                 anonymity : Boolean = true,
                 continuousOrAfterstop : Boolean = false,
                 start_time : Option[Date] = None,
                 end_time : Option[Date] = None,
-                questions : List[Question] = List()
+                questions : List[Question] = List(),
                )
 
 

@@ -22,14 +22,6 @@ class CommandParser extends RegexParsers {
 
   def list: Parser[Command] = """^/list""".r ^^ { _ => Matcher.ListM() }
 
-  def addQuestion: Parser[Command] = {
-    val question = Parser("(" ~> """[_a-zA-Zа-яА-ЯёЁ0-9.,:;'"*&!? ]+""".r <~ ")")
-    val questionType = Parser("(" ~> ("open"|"choice"|"multi") <~ ")")
-    val variant = Parser(Properties.lineSeparator ~> """.*""".r )
-    val command = Parser("/add_question" ~> question)
-    command~questionType~rep(variant) ^^ { case a~b~c => Matcher.AddQuestionM(a, b, c)}
-  }
-
   def delete: Parser[Command] = "/delete_poll" ~> "(" ~>"""\d+""".r <~ ")" ^^ { d => Matcher.DeleteM(d.toInt) } //TODO separate ACCEPT
   def start: Parser[Command] = "/start_poll" ~> "(" ~> """\d+""".r <~ ")" ^^ { d => Matcher.StartM(d.toInt) }
 
@@ -45,6 +37,14 @@ class CommandParser extends RegexParsers {
 
   def deleteQuestion: Parser[Command] = "/delete_question" ~> "(" ~> """\d+""".r <~ ")" ^^ { d => Matcher.DeleteQuestionM(d.toInt) }
 
+  def addQuestionChoice: Parser[Command] = {
+    val question = Parser("(" ~> """[_a-zA-Zа-яА-ЯёЁ0-9.,:;'"*&!? ]+""".r <~ ")")
+    val questionType = Parser("(" ~> ("choice"|"multi") <~ ")")
+    val variant = Parser(Properties.lineSeparator ~> """.*""".r )
+    val command = Parser("/add_question" ~> question)
+    command~questionType~rep(variant) ^^ { case a~b~c => Matcher.AddQuestionChoiceM(a, b, c)}
+  }
+
   def answerOpen: Parser[Command] = {
     val digit = Parser("(" ~> """\d+""".r <~ ")")
     val otvet = Parser("(" ~> """[_a-zA-Zа-яА-ЯёЁ0-9.,:;'"*&!? ]+""".r <~ ")")
@@ -52,7 +52,7 @@ class CommandParser extends RegexParsers {
     command~otvet ^^ { case a~b => Matcher.AnswerStringM(a.toInt, b)}
   }
 
-  val rlt: Parser[Command] = createPoll | list | delete | start | stop | result | begin | end | view | answerOpen | deleteQuestion | addQuestion | failure("Unknown command")
+  val rlt: Parser[Command] = createPoll | list | delete | start | stop | result | begin | end | view | answerOpen | deleteQuestion | addQuestionChoice | failure("Unknown command")
 
 
   def apply(input: String): ParseResult[Command] = parse(rlt, input)

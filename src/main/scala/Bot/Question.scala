@@ -1,11 +1,15 @@
 package Bot
 
+import scala.collection.immutable.HashSet
 
-case class Question(name: String, typeOfQuestion: String, variants: List[Variant])
 
-case class User(id:Int,answer:String)
+case class Question(name: String, typeOfQuestion: String, voitedUsers:HashSet[User], variants: List[Variant])
 
-case class Variant(name: String, answers: List[User])
+case class User(id:Int)
+
+case class Answer(answer: String, user: Option[User])
+
+case class Variant(name: String, answers: List[Answer])
 
 object QuestionHandler {
 
@@ -17,9 +21,19 @@ object QuestionHandler {
     question.copy(typeOfQuestion = newType)
   }
 
-  def addAnswer(question: Question, id:Int, answer: User): Question = {
-    val a = question.variants(id).copy(answers = answer :: question.variants(id).answers)
-    question.copy(variants = question.variants.updated(id, a))
+  def addAnswer(question: Question, anonymity:Boolean, id:Int, answer: Answer): Question = {
+    anonymity match {
+      case false => {
+        val a = question.variants(id).copy(answers = answer :: question.variants(id).answers)
+        question.copy(variants = question.variants.updated(id, a)).copy(voitedUsers = question.voitedUsers + answer.user.get)
+
+      }
+      case true => {
+        val a = question.variants(id).copy(answers = answer.copy(user = None) :: question.variants(id).answers)
+        question.copy(variants = question.variants.updated(id, a)).copy(voitedUsers = question.voitedUsers + answer.user.get)
+      }
+    }
+
   }
 
 }

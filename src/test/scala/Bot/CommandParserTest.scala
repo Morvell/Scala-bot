@@ -95,16 +95,16 @@ class CommandParserTest extends FlatSpec with Matchers{
     result.get shouldBe a [Matcher.DeleteQuestionM]
   }
 
-  "/add_question multi" should Matcher.AddQuestionM.toString() in {
-    val result = parser("""/add_question (Test case) (multi)
+  "/add_question multi" should Matcher.AddQuestionChoiceM.toString() in {
+    val result = parser("""/add_question (Test case) (choice)
         |One And A
         |Two""".stripMargin)
-    result.get match { case c: Matcher.AddQuestionM =>
+    result.get match { case c: Matcher.AddQuestionChoiceM =>
       c.q shouldBe "Test case"
-      c.t shouldBe "multi"
+      c.t shouldBe "choice"
       c.variant.tail.head shouldBe "Two"
     }
-    result.get shouldBe a [Matcher.AddQuestionM]
+    result.get shouldBe a [Matcher.AddQuestionChoiceM]
   }
 
 
