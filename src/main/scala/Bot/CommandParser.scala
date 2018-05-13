@@ -40,7 +40,7 @@ class CommandParser extends RegexParsers {
   def addQuestionChoice: Parser[Command] = {
     val question = Parser("(" ~> """[_a-zA-Zа-яА-ЯёЁ0-9.,:;'"*&!? ]+""".r <~ ")")
     val questionType = Parser("(" ~> ("choice"|"multi") <~ ")")
-    val variant = Parser(Properties.lineSeparator ~> """[_a-zA-Zа-яА-ЯёЁ0-9.,:;'"*&!? ]+""".r )
+    val variant = Parser("\n" ~> """[_a-zA-Zа-яА-ЯёЁ0-9.,:;'"*&!? ]+""".r )
     val command = Parser("/add_question" ~> question)
     command~questionType~rep(variant) ^^ { case a~b~c => Matcher.AddQuestionChoiceM(a, b, c)}
   }
