@@ -50,11 +50,6 @@ object CommandImpl extends Repository {
     maxId.next()
   }
 
-  def getUserID: Int = {
-    userID.next()
-  }
-
-
   def worker(string: String): Unit = {
     println(string)
   }
@@ -79,12 +74,12 @@ object CommandImpl extends Repository {
     None
   }
 
-  def checkRoot(poll: Poll, id:Int):Boolean = {
+  def checkRoot(poll: Poll, id:Long):Boolean = {
     poll.admin == id
   }
 
   def createPoll(name: String, anonymityVar: Option[String], continuousOrAfterstopVar: Option[String],
-                 startTimeVar: Option[String], stopTimeVar: Option[String]): Int = {
+                 startTimeVar: Option[String], stopTimeVar: Option[String], user: User = User(0,"")): Int = {
     val anonymity = anonymityVar.getOrElse("yes") == "yes"
 
     val continuousOrAfterstop = continuousOrAfterstopVar.getOrElse("afterstop") == "continuous"
@@ -95,7 +90,7 @@ object CommandImpl extends Repository {
 
     val id = getMaxID
 
-    putInRep(id, Poll(name,getUserID, id, anonymity, continuousOrAfterstop, startTime1, stopTime1))
+    putInRep(id, Poll(name,id, user.id, anonymity, continuousOrAfterstop, startTime1, stopTime1))
 
 
     id
@@ -105,19 +100,19 @@ object CommandImpl extends Repository {
     getRep.aggregate("Current polls: \n")((s, p) => s"$s ${p._1} :   ${p._2.name}\n", _ + _)
   }
 
-  def deletePoll(id: Int, userIDE: Int): String = {
+  def deletePoll(id: Int, userIDE: User): String = {
 
     getRep.get(id).map { poll =>
-      if (!checkRoot(poll, userIDE)) return "У тебя здесь нет прав"
+      if (!checkRoot(poll, userIDE.id)) return "У тебя здесь нет прав"
       removeFromRep(id)
       "Poll deleted successfully"
     }.getOrElse("Error: poll is not exist")
 
   }
 
-  def startPoll(id: Int, date: Date, userIDE:Int): String = {
+  def startPoll(id: Int, date: Date, userIDE:User): String = {
     getPoolByIdOption(id).map { poll =>
-      if (!checkRoot(poll, userIDE)) return "У тебя здесь нет прав"
+      if (!checkRoot(poll, userIDE.id)) return "У тебя здесь нет прав"
       if (PollCommand.active(poll, date)) {
         return "Уже запущен"
       }
@@ -135,10 +130,10 @@ object CommandImpl extends Repository {
   }
 
 
-  def stopPoll(id: Int, date: Date, userIDE:Int): String = {
+  def stopPoll(id: Int, date: Date, userIDE:User): String = {
 
     getPoolByIdOption(id).map { poll =>
-      if (!checkRoot(poll, userIDE)) return "У тебя здесь нет прав"
+      if (!checkRoot(poll, userIDE.id)) return "У тебя здесь нет прав"
       if (!PollCommand.active(poll, date)) {
         return "Опрос еще не запущен"
       }
@@ -182,9 +177,9 @@ object CommandImpl extends Repository {
     }.getOrElse("Error : не выбран контекст")
   }
 
-  def addQuestion(name: String, typeOfQuestion: String, list: List[String], userIDE:Int): String = {
+  def addQuestion(name: String, typeOfQuestion: String, list: List[String], userIDE:User): String = {
     getPoolByIdOption(context.get).map { poll =>
-      if (!checkRoot(poll, userIDE)) return "У тебя здесь нет прав"
+      if (!checkRoot(poll, userIDE.id)) return "У тебя здесь нет прав"
       val question = Question(name,typeOfQuestion, HashSet[User](),list.map(e => Variant(e, Nil)))
       putInRep(context.get,PollCommand.addQuestion(poll, question))
       "Номер добавленного вопроса: " + poll.questions.size
@@ -192,21 +187,20 @@ object CommandImpl extends Repository {
     }.getOrElse("Error : не выбран контекст")
   }
 
-  def deleteQuestion(id:Int, userIDE:Int): String = {
+  def deleteQuestion(id:Int, userIDE:User): String = {
     getPoolByIdOption(context.get).map { poll =>
-      if (!checkRoot(poll, userIDE)) return "У тебя здесь нет прав"
+      if (!checkRoot(poll, userIDE.id)) return "У тебя здесь нет прав"
       putInRep(context.get, PollCommand.deleteQuestionById(poll,id))
       "Вопрос удален"
 
     }.getOrElse("Error : не выбран контекст")
   }
 
-  def addAnswerOpen(id:Int, answer:String): String = {
-    val l_userId = getUserID
+  def addAnswerOpen(id:Int, answer:String, user: User): String = {
 
     context.map(cont => {
       val poll = getPoolByIdOption(cont).get
-      val b = QuestionHandler.addAnswer(poll.questions(id),poll.anonymity,  0, Answer(answer,Option(User(l_userId))))
+      val b = QuestionHandler.addAnswer(poll.questions(id),poll.anonymity,  0, Answer(answer,Option(user)))
       val a = PollCommand.updateQuestion(poll, id, b)
       putInRep(cont, a)
       "Вы проголосовали"
@@ -215,14 +209,12 @@ object CommandImpl extends Repository {
   }
 
 
-  def addAnswerChoice(id:Int, list: List[Int]): String = {
-
-    val l_userId = getUserID
+  def addAnswerChoice(id:Int, list: List[Int], user: User): String = {
 
     context.map(cont => {
       for(i <- list) yield {
         val poll = getPoolByIdOption(cont).get
-        val b = QuestionHandler.addAnswer(poll.questions(id),poll.anonymity,  i, Answer("",Option(User(l_userId))))
+        val b = QuestionHandler.addAnswer(poll.questions(id),poll.anonymity,  i, Answer("",Option(user)))
         val a = PollCommand.updateQuestion(poll, id, b)
         putInRep(cont, a)
       }

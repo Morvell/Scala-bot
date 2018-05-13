@@ -1,4 +1,4 @@
-import Bot.App
+import Bot.{App, User}
 import info.mukel.telegrambot4s._
 import api._
 import methods._
@@ -12,7 +12,8 @@ object Telegram extends TelegramBot with Polling with Commands {
   override def receiveMessage(msg: Message): Unit = {
     for (text <- msg.text) {
       println(msg.source)
-      request(SendMessage(msg.source, App.responseToLine(text)))
+      println(msg.from.get.id)
+      request(SendMessage(msg.source, App.responseToLine(text,User(msg.source,msg.from.get.firstName + " " + msg.from.get.lastName.getOrElse("")))))
     }
   }
 

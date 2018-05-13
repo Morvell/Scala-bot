@@ -2,8 +2,10 @@ package Bot
 
 import java.util.Date
 
+import Bot.CommandImpl.getRep
+
 case class Poll(name : String, id : Int,
-                admin : Int,
+                admin : Long,
                 anonymity : Boolean = true,
                 continuousOrAfterstop : Boolean = false,
                 start_time : Option[Date] = None,
@@ -54,7 +56,18 @@ object PollCommand {
   def getResult(poll: Poll, date: Date) : String = { if (active(poll, date) && !poll.continuousOrAfterstop) {
     "Can not see before finished"
   } else {
-    "The poll " + poll.name + " has following result: "
+    getNonAnonOpenResult(poll.questions.head)
   }
+  }
+
+  def getAnonOpenResult(question: Question): String = {
+    question.name + "\n" + "Проголосовало: " + question.voitedUsers.size + question.variants.head.answers.aggregate("\n")((c,ans) =>  c + "# " + ans.answer + "\n", _ + _)
+//    question.aggregate("\n")((a,b) => a + b.name + "\n" + "Проголосовало: " + b.voitedUsers.size + "\n" + b.variants.head.answers.aggregate("\n")((c,ans) =>  c + "# " + ans.answer + "\n", _ + _) + "\n", _ + _)
+  }
+
+  def getNonAnonOpenResult(question: Question): String = {
+
+    question.name + "\n" + "Проголосовало: " + question.voitedUsers.size + question.variants.head.answers.aggregate("\n")((c,ans) =>  c + "# "+ans.user.get.id +"---" + ans.answer + "\n", _ + _)
+
   }
 }

@@ -5,7 +5,7 @@ import scala.collection.immutable.HashSet
 
 case class Question(name: String, typeOfQuestion: String, voitedUsers:HashSet[User], variants: List[Variant])
 
-case class User(id:Int)
+case class User(id:Long, name:String)
 
 case class Answer(answer: String, user: Option[User])
 
