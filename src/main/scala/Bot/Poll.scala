@@ -3,6 +3,7 @@ package Bot
 import java.util.Date
 
 import Bot.CommandImpl.getRep
+import Bot.PollCommand.{getAnonChoiceResult, getAnonOpenResult}
 
 case class Poll(name : String, id : Int,
                 admin : Long,
@@ -53,11 +54,32 @@ object PollCommand {
     if (poll.end_time.isDefined) return poll
     poll.copy(end_time = Option(date))
   }
-  def getResult(poll: Poll, date: Date) : String = { if (active(poll, date) && !poll.continuousOrAfterstop) {
-    "Can not see before finished"
+  def getResult(poll: Poll, date: Date) : String = {
+    if (active(poll, date) && !poll.continuousOrAfterstop) {
+      "Can not see before finished"
   } else {
-    getNonAnonOpenResult(poll.questions.head)
-  }
+    poll.anonymity match {
+      case true => {
+        val result = for (q <- poll.questions) yield {
+          q.typeOfQuestion match {
+            case "multi" => getAnonChoiceResult(q)
+            case "choice" => getAnonChoiceResult(q)
+            case "open" => getAnonOpenResult(q)
+          }
+
+        }
+        result.aggregate("")((b,str) => b + str +"\n",_ + _)
+      }
+      case false => {
+        val result = for (q <- poll.questions) yield {
+          q.typeOfQuestion match {
+            case "multi" => getNonAnonChoiceResult(q)
+            case "choice" => getNonAnonChoiceResult(q)
+            case "open" => getNonAnonOpenResult(q)
+          }
+      }
+        result.aggregate("")((b,str) => b + str +"\n",_ + _)
+  }}}
   }
 
   def getAnonOpenResult(question: Question): String = {
@@ -67,7 +89,17 @@ object PollCommand {
 
   def getNonAnonOpenResult(question: Question): String = {
 
-    question.name + "\n" + "Проголосовало: " + question.voitedUsers.size + question.variants.head.answers.aggregate("\n")((c,ans) =>  c + "# "+ans.user.get.id +"---" + ans.answer + "\n", _ + _)
+    question.name + "\n" + "Проголосовало: " + question.voitedUsers.size + question.variants.head.answers.aggregate("\n")((c,ans) =>  c + "# "+ans.user.get.name +"---" + ans.answer + "\n", _ + _)
+
+  }
+
+  def getAnonChoiceResult(question: Question): String = {
+    question.name + "\n" + "Проголосовало: " + question.voitedUsers.size + question.variants.aggregate("\n")((b,variant) => b+variant.name+": " + variant.answers.size + "\n", _ + _)
+
+  }
+
+  def getNonAnonChoiceResult(question: Question): String = {
+    question.name + "\n" + "Проголосовало: " + question.voitedUsers.size + question.variants.aggregate("\n")((b,variant) => b+variant.name+": " + variant.answers.size + "\n" + "Голосовали: " + variant.answers.aggregate("")((k, ans) => k + ans.user.get.name + ",", _ + _) + "\n", _ + _)
 
   }
 }
