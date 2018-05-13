@@ -54,6 +54,34 @@ object PollCommand {
     if (poll.end_time.isDefined) return poll
     poll.copy(end_time = Option(date))
   }
+
+  def getView(poll: Poll) : String = {
+
+
+    val result = for (q <- poll.questions) yield {
+      q.typeOfQuestion match {
+        case "multi" => getViewChoiceResult(q)
+        case "choice" => getViewChoiceResult(q)
+        case "open" => getViewOpenResult(q)
+      }
+
+    }
+    result.aggregate("")((b, str) => b + str + "\n", _ + _)
+
+
+  }
+
+  def getViewOpenResult(question: Question): String = {
+    question.name +" open голосование" + "\n"
+  }
+
+  def getViewChoiceResult(question: Question): String = {
+    question.name + "\n" + question.variants.aggregate("\n")((b,variant) => b+variant.name+"\n", _ + _)
+
+  }
+
+
+
   def getResult(poll: Poll, date: Date) : String = {
     if (active(poll, date) && !poll.continuousOrAfterstop) {
       "Can not see before finished"

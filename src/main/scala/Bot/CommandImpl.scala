@@ -97,6 +97,7 @@ object CommandImpl extends Repository {
   }
 
   def listPolls(): String = {
+    val a = getRep.getOrElse(0, return "Еще нет пулов")
     getRep.aggregate("Current polls: \n")((s, p) => s"$s ${p._1} :   ${p._2.name}\n", _ + _)
   }
 
@@ -171,8 +172,9 @@ object CommandImpl extends Repository {
   }
 
   def view(): String = {
+    val a = getRep.getOrElse(0, return "Еще нечего показывать")
     getPoolByIdOption(context.get).map { poll =>
-      poll.toString
+      PollCommand.getView(poll)
 
     }.getOrElse("Error : не выбран контекст")
   }
@@ -200,6 +202,7 @@ object CommandImpl extends Repository {
 
     context.map(cont => {
       val poll = getPoolByIdOption(cont).get
+      if (poll.questions(id).voitedUsers.contains(user)) return "Вы уже голосовали"
       val b = QuestionHandler.addAnswer(poll.questions(id),poll.anonymity,  0, Answer(answer,Option(user)))
       val a = PollCommand.updateQuestion(poll, id, b)
       putInRep(cont, a)

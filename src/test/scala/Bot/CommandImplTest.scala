@@ -193,8 +193,8 @@ class CommandImplTest extends FlatSpec with Matchers with BeforeAndAfterEach {
     val r2 = CommandImpl.createPoll("test",Option("yes"),Option("test"),Option("13:22:00 18:02:18"),Option("13:22:00 18:03:99"))
     CommandImpl.context = Option(r2)
     CommandImpl.addQuestion("Тестовый вопрос?", "open", "open"::Nil, User(CommandImpl.getPollById(r2).admin,""))
-    CommandImpl.addAnswerOpen(0, "Можно",User(CommandImpl.getPollById(r2).admin,""))
-    CommandImpl.addAnswerOpen(0, "Нельзя",User(CommandImpl.getPollById(r2).admin,""))
+    CommandImpl.addAnswerOpen(0, "Можно",User(1,""))
+    CommandImpl.addAnswerOpen(0, "Нельзя",User(2,""))
     CommandImpl.getPollById(r2).questions.size shouldBe 1
     CommandImpl.getPollById(r2).questions.head.variants.size shouldBe 1
     CommandImpl.getPollById(r2).questions.head.variants.head.answers.size shouldBe 2
@@ -206,10 +206,10 @@ class CommandImplTest extends FlatSpec with Matchers with BeforeAndAfterEach {
     CommandImpl.context = Option(r2)
     CommandImpl.addQuestion("Тестовый вопрос?", "open", "open"::Nil, User(CommandImpl.getPollById(r2).admin,""))
     CommandImpl.addAnswerOpen(0, "Можно",User(CommandImpl.getPollById(r2).admin,""))
-    CommandImpl.addAnswerOpen(0, "Нельзя",User(CommandImpl.getPollById(r2).admin,""))
+    CommandImpl.addAnswerOpen(0, "Нельзя",User(1,""))
     CommandImpl.addQuestion("Тестовый вопрос2?", "open", "open"::Nil, User(CommandImpl.getPollById(r2).admin,""))
     CommandImpl.addAnswerOpen(1, "Можно Наерное",User(CommandImpl.getPollById(r2).admin,""))
-    CommandImpl.addAnswerOpen(1, "Нельзя Наверное",User(CommandImpl.getPollById(r2).admin,""))
+    CommandImpl.addAnswerOpen(1, "Нельзя Наверное",User(1,""))
     val result = "Тестовый вопрос?\nПроголосовало: 2\n# Нельзя\n# Можно\n"
 //    PollCommand.getAnonOpenResult(CommandImpl.getPollById(r2).questions.head) shouldBe result //TODO
   }
@@ -219,7 +219,7 @@ class CommandImplTest extends FlatSpec with Matchers with BeforeAndAfterEach {
     CommandImpl.context = Option(r2)
     CommandImpl.addQuestion("Тестовый вопрос?", "open", "open"::Nil, User(CommandImpl.getPollById(r2).admin,""))
     CommandImpl.addAnswerOpen(0, "Можно",User(CommandImpl.getPollById(r2).admin,""))
-    CommandImpl.addAnswerOpen(0, "Нельзя",User(CommandImpl.getPollById(r2).admin,""))
+    CommandImpl.addAnswerOpen(0, "Нельзя",User(1,""))
     val result = "Тестовый вопрос?\nПроголосовало: 2\n# Нельзя\n# Можно\n"
     val r = PollCommand.getNonAnonOpenResult(CommandImpl.getPollById(r2).questions.head)
 //    PollCommand.getNonAnonOpenResult(CommandImpl.getPollById(r2).questions.head) shouldBe result //TODO
@@ -231,7 +231,7 @@ class CommandImplTest extends FlatSpec with Matchers with BeforeAndAfterEach {
     CommandImpl.context = Option(r2)
     CommandImpl.addQuestion("Тестовый вопрос?", "multi","1"::"2"::"3"::Nil, User(CommandImpl.getPollById(r2).admin,""))
     CommandImpl.addAnswerChoice(0, 0::1::Nil,User(CommandImpl.getPollById(r2).admin,""))
-    CommandImpl.addAnswerChoice(0, 0::2::Nil,User(CommandImpl.getPollById(r2).admin,""))
+    CommandImpl.addAnswerChoice(0, 0::2::Nil,User(1,""))
     val r = PollCommand.getAnonChoiceResult(CommandImpl.getPollById(r2).questions.head)
     val a = r//TODO
 
@@ -242,7 +242,7 @@ class CommandImplTest extends FlatSpec with Matchers with BeforeAndAfterEach {
     CommandImpl.context = Option(r2)
     CommandImpl.addQuestion("Тестовый вопрос?", "multi","1"::"2"::"3"::Nil, User(CommandImpl.getPollById(r2).admin,""))
     CommandImpl.addAnswerChoice(0, 0::1::Nil,User(CommandImpl.getPollById(r2).admin,"Царь"))
-    CommandImpl.addAnswerChoice(0, 0::2::Nil,User(CommandImpl.getPollById(r2).admin,"Царь"))
+    CommandImpl.addAnswerChoice(0, 0::2::Nil,User(1,"Царь"))
     val q = CommandImpl.getPollById(r2)
     val r = PollCommand.getNonAnonChoiceResult(CommandImpl.getPollById(r2).questions.head)
     val a = r //TODO
@@ -254,10 +254,10 @@ class CommandImplTest extends FlatSpec with Matchers with BeforeAndAfterEach {
     CommandImpl.context = Option(r2)
     CommandImpl.addQuestion("Тестовый вопрос?", "multi","1"::"2"::"3"::Nil, User(CommandImpl.getPollById(r2).admin,""))
     CommandImpl.addAnswerChoice(0, 0::1::Nil,User(CommandImpl.getPollById(r2).admin,"Царь"))
-    CommandImpl.addAnswerChoice(0, 0::2::Nil,User(CommandImpl.getPollById(r2).admin,"Царь"))
+    CommandImpl.addAnswerChoice(0, 0::2::Nil,User(1,"Царь2"))
     CommandImpl.addQuestion("Тестовый вопрос2?", "open", "open"::Nil, User(CommandImpl.getPollById(r2).admin,""))
     CommandImpl.addAnswerOpen(1, "Можно",User(CommandImpl.getPollById(r2).admin,"Царь"))
-    CommandImpl.addAnswerOpen(1, "Нельзя",User(CommandImpl.getPollById(r2).admin,"Царь"))
+    CommandImpl.addAnswerOpen(1, "Нельзя",User(1,"Царь2"))
     val q = CommandImpl.getPollById(r2)
     val r = PollCommand.getResult(CommandImpl.getPollById(r2),CommandImpl.getTimeFromFormat("13:22:01 26:02:26"))
     val a = r //TODO
@@ -270,12 +270,27 @@ class CommandImplTest extends FlatSpec with Matchers with BeforeAndAfterEach {
     CommandImpl.context = Option(r2)
     CommandImpl.addQuestion("Тестовый вопрос?", "multi","1"::"2"::"3"::Nil, User(CommandImpl.getPollById(r2).admin,""))
     CommandImpl.addAnswerChoice(0, 0::1::Nil,User(CommandImpl.getPollById(r2).admin,"Царь"))
+    CommandImpl.addAnswerChoice(0, 0::2::Nil,User(1,"Царь2"))
+    CommandImpl.addQuestion("Тестовый вопрос2?", "open", "open"::Nil, User(CommandImpl.getPollById(r2).admin,""))
+    CommandImpl.addAnswerOpen(1, "Можно",User(CommandImpl.getPollById(r2).admin,"Царь"))
+    CommandImpl.addAnswerOpen(1, "Нельзя",User(1,"2"))
+    val q = CommandImpl.getPollById(r2)
+    val r = PollCommand.getResult(CommandImpl.getPollById(r2),CommandImpl.getTimeFromFormat("13:22:01 26:02:26"))
+    val a = r //TODO
+
+  }
+
+  "/view" should "full" in {
+    val r2 = CommandImpl.createPoll("test",Option("no"),Option("test"),Option("13:22:00 18:02:15"),Option("13:22:00 18:03:18"))
+    CommandImpl.context = Option(r2)
+    CommandImpl.addQuestion("Тестовый вопрос?", "multi","1"::"2"::"3"::Nil, User(CommandImpl.getPollById(r2).admin,""))
+    CommandImpl.addAnswerChoice(0, 0::1::Nil,User(CommandImpl.getPollById(r2).admin,"Царь"))
     CommandImpl.addAnswerChoice(0, 0::2::Nil,User(CommandImpl.getPollById(r2).admin,"Царь"))
     CommandImpl.addQuestion("Тестовый вопрос2?", "open", "open"::Nil, User(CommandImpl.getPollById(r2).admin,""))
     CommandImpl.addAnswerOpen(1, "Можно",User(CommandImpl.getPollById(r2).admin,"Царь"))
     CommandImpl.addAnswerOpen(1, "Нельзя",User(CommandImpl.getPollById(r2).admin,"Царь"))
     val q = CommandImpl.getPollById(r2)
-    val r = PollCommand.getResult(CommandImpl.getPollById(r2),CommandImpl.getTimeFromFormat("13:22:01 26:02:26"))
+    val r = PollCommand.getView(CommandImpl.getPollById(r2))
     val a = r //TODO
 
   }
