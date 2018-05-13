@@ -59,7 +59,22 @@ class CommandParser extends RegexParsers {
     command~otvet ^^ { case a~b => Matcher.AnswerStringM(a.toInt, b)}
   }
 
-  val rlt: Parser[Command] = createPoll | list | delete | start | stop | result | begin | end | view | answerOpen | deleteQuestion | addQuestionChoice | addQuestionOpen | failure("Unknown command")
+  def answerChoice: Parser[Command] = {
+    val digit = Parser("(" ~> """\d+""".r <~ ")")
+    val otvet = Parser("(" ~> """[_a-zA-Zа-яА-ЯёЁ0-9.,:;'"*&!? ]+""".r <~ ")")
+    val command = Parser("/answer" ~> digit)
+    command~digit ^^ { case a~b => Matcher.AnswerDigitM(a.toInt, b.toInt::Nil)}
+  }
+
+  def answerMulti: Parser[Command] = {
+    val digit = Parser("(" ~> """\d+""".r <~ ")")
+    val variant = Parser("\n" ~> """\d+""".r )
+    val command = Parser("/answer" ~> digit)
+    command~rep(variant) ^^ { case a~b => Matcher.AnswerDigitM(a.toInt, b.map(_.toInt))}
+  }
+
+
+  val rlt: Parser[Command] = createPoll | list | delete | start | stop | result | begin | end | view | answerOpen | deleteQuestion | addQuestionChoice | addQuestionOpen | answerChoice | answerMulti| failure("Unknown command")
 
 
   def apply(input: String): ParseResult[Command] = parse(rlt, input)

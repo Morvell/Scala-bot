@@ -102,7 +102,7 @@ object CommandImpl extends Repository {
   }
 
   def deletePoll(id: Int, userIDE: User): String = {
-
+    if (getRep.isEmpty) return "Тебе еще рано об этом задумываться"
     getRep.get(id).map { poll =>
       if (!checkRoot(poll, userIDE.id)) return "У тебя здесь нет прав"
       removeFromRep(id)
@@ -160,6 +160,7 @@ object CommandImpl extends Repository {
   }
 
   def begin(id: Int): String = {
+    if (!getRep.contains(id)) return "Нет такого контекста"
     context = Option(id)
     "Контекст переключен на " + id
   }
@@ -172,15 +173,14 @@ object CommandImpl extends Repository {
   }
 
   def view(): String = {
-    val a = getRep.getOrElse(0, return "Еще нечего показывать")
-    getPoolByIdOption(context.get).map { poll =>
+    getPoolByIdOption(context.getOrElse(return "Тебе еще рано об этом задумываться")).map { poll =>
       PollCommand.getView(poll)
 
     }.getOrElse("Error : не выбран контекст")
   }
 
   def addQuestion(name: String, typeOfQuestion: String, list: List[String], userIDE:User): String = {
-    getPoolByIdOption(context.get).map { poll =>
+    getPoolByIdOption(context.getOrElse(return "Тебе еще рано об этом задумываться")).map { poll =>
       if (!checkRoot(poll, userIDE.id)) return "У тебя здесь нет прав"
       val question = Question(name,typeOfQuestion, HashSet[User](),list.map(e => Variant(e, Nil)))
       putInRep(context.get,PollCommand.addQuestion(poll, question))
@@ -190,7 +190,7 @@ object CommandImpl extends Repository {
   }
 
   def deleteQuestion(id:Int, userIDE:User): String = {
-    getPoolByIdOption(context.get).map { poll =>
+    getPoolByIdOption(context.getOrElse(return "Тебе еще рано об этом задумываться")).map { poll =>
       if (!checkRoot(poll, userIDE.id)) return "У тебя здесь нет прав"
       putInRep(context.get, PollCommand.deleteQuestionById(poll,id))
       "Вопрос удален"
@@ -203,6 +203,7 @@ object CommandImpl extends Repository {
     context.map(cont => {
       val poll = getPoolByIdOption(cont).get
       if (poll.questions(id).voitedUsers.contains(user)) return "Вы уже голосовали"
+      if (poll.questions(id).typeOfQuestion != "open") return "Вы ошиблись методом голосования"
       val b = QuestionHandler.addAnswer(poll.questions(id),poll.anonymity,  0, Answer(answer,Option(user)))
       val a = PollCommand.updateQuestion(poll, id, b)
       putInRep(cont, a)
@@ -217,6 +218,8 @@ object CommandImpl extends Repository {
     context.map(cont => {
       for(i <- list) yield {
         val poll = getPoolByIdOption(cont).get
+        if (poll.questions(id).voitedUsers.contains(user)) return "Вы уже голосовали"
+        if (poll.questions(id).typeOfQuestion == "choice" && list.size>1) return "Вы ошиблись методом голосования"
         val b = QuestionHandler.addAnswer(poll.questions(id),poll.anonymity,  i, Answer("",Option(user)))
         val a = PollCommand.updateQuestion(poll, id, b)
         putInRep(cont, a)
