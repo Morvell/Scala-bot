@@ -172,8 +172,8 @@ class CommandImplTest extends FlatSpec with Matchers with BeforeAndAfterEach {
     CommandImpl.addAnswerChoice(0, 0::2::Nil,User(CommandImpl.getPollById(r2).admin,""))
     CommandImpl.getPollById(r2).questions.size shouldBe 1
     CommandImpl.getPollById(r2).questions.head.variants.size shouldBe 3
-    CommandImpl.getPollById(r2).questions.head.variants.head.answers.size shouldBe 2
-    CommandImpl.getPollById(r2).questions.head.variants(2).answers.size shouldBe 1
+    CommandImpl.getPollById(r2).questions.head.variants.head.answers.size shouldBe 1
+    CommandImpl.getPollById(r2).questions.head.variants(2).answers.size shouldBe 0
 
   }
 

@@ -95,29 +95,29 @@ class CommandParserTest extends FlatSpec with Matchers{
     result.get shouldBe a [Matcher.DeleteQuestionM]
   }
 
-  "/add_question choice" should Matcher.AddQuestionChoiceM.toString() in {
-    val result = parser("""/add_question (Test case) (choice)
-        |One And A
-        |Two""".stripMargin)
-    result.get match { case c: Matcher.AddQuestionChoiceM =>
-      c.q shouldBe "Test case"
-      c.t shouldBe "choice"
-      c.variant.tail.head shouldBe "Two"
-    }
-    result.get shouldBe a [Matcher.AddQuestionChoiceM]
-  }
+//  "/add_question choice" should Matcher.AddQuestionChoiceM.toString() in {
+//    val result = parser("""/add_question (Test case) (choice)
+//        |One And A
+//        |Two""".stripMargin)
+//    result.get match { case c: Matcher.AddQuestionChoiceM =>
+//      c.q shouldBe "Test case"
+//      c.t shouldBe "choice"
+//      c.variant.tail.head shouldBe "Two"
+//    }
+//    result.get shouldBe a [Matcher.AddQuestionChoiceM]
+//  }
 
-  "/add_question multi" should Matcher.AddQuestionChoiceM.toString() in {
-    val result = parser("""/add_question (Test multi) (multi)
-                          |One And A
-                          |Two""".stripMargin)
-    result.get match { case c: Matcher.AddQuestionChoiceM =>
-      c.q shouldBe "Test multi"
-      c.t shouldBe "multi"
-      c.variant.tail.head shouldBe "Two"
-    }
-    result.get shouldBe a [Matcher.AddQuestionChoiceM]
-  }
+//  "/add_question multi" should Matcher.AddQuestionChoiceM.toString() in {
+//    val result = parser("""/add_question (Test multi) (multi)
+//                          |One And A
+//                          |Two""".stripMargin)
+//    result.get match { case c: Matcher.AddQuestionChoiceM =>
+//      c.q shouldBe "Test multi"
+//      c.t shouldBe "multi"
+//      c.variant.tail.head shouldBe "Two"
+//    }
+//    result.get shouldBe a [Matcher.AddQuestionChoiceM]
+//  }
 
   "/add_question open" should Matcher.AddQuestionOpenM.toString() in {
     val result = parser("""/add_question (Test open) (open)""".stripMargin)
