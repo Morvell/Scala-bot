@@ -121,16 +121,17 @@ object PollCommand {
 
 //  def makeHistogram(question: Question): String = {
 //    val maxLen = 15
+//    question.
 //
 //  }
 
   def getAnonChoiceResult(question: Question): String = {
-    question.name + "\n" + "Проголосовало: " + question.voitedUsers.size + question.variants.aggregate("\n")((b,variant) => b+variant.name+": " + variant.answers.size + "\n", _ + _)
+    question.name + "\n" + "Проголосовало: " + question.voitedUsers.size + question.variants.aggregate("\n")((b,variant) => b+"  " +variant.name+": " + variant.answers.size + "\n", _ + _)
 
   }
 
   def getNonAnonChoiceResult(question: Question): String = {
-    question.name + "\n" + "Проголосовало: " + question.voitedUsers.size + question.variants.aggregate("\n")((b,variant) => b+variant.name+": " + variant.answers.size + "\n" + "Голосовали: " + variant.answers.aggregate("")((k, ans) => k + ans.user.get.name + ",", _ + _) + "\n", _ + _)
+    question.name + "\n" + "Проголосовало: " + question.voitedUsers.size + question.variants.aggregate("\n")((b,variant) => b+"  " + variant.name+": " + variant.answers.size + "\n" + "Голосовали: " + variant.answers.aggregate("")((k, ans) => k + ans.user.get.name + ",", _ + _) + "\n", _ + _)
 
   }
 }

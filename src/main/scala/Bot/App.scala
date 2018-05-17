@@ -2,8 +2,6 @@ package Bot
 
 import java.util.Date
 
-import scala.io.Source
-
 object App {
 
   def responseToLine(line: String, user: User): String = {
