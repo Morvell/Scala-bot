@@ -93,7 +93,7 @@ object CommandImpl extends Repository {
     putInRep(id, Poll(name,id, user.id, anonymity, continuousOrAfterstop, startTime1, stopTime1))
 
 
-    id
+    id //TODO более отзывчиво
   }
 
   def listPolls(): String = {

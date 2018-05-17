@@ -2,9 +2,6 @@ package Bot
 
 import java.util.Date
 
-import Bot.CommandImpl.getRep
-import Bot.PollCommand.{getAnonChoiceResult, getAnonOpenResult}
-
 case class Poll(name : String, id : Int,
                 admin : Long,
                 anonymity : Boolean = true,
@@ -76,7 +73,8 @@ object PollCommand {
   }
 
   def getViewChoiceResult(question: Question): String = {
-    question.name + "\n" + question.variants.aggregate("\n")((b,variant) => b+variant.name+"\n", _ + _)
+    val id = Stream.from(0).iterator
+    question.name +" " + question.typeOfQuestion + " голосование" + question.variants.aggregate("\n")((b,variant) => b+"  "+id.next() + ") "+variant.name+"\n", _ + _)
 
   }
 
@@ -120,6 +118,11 @@ object PollCommand {
     question.name + "\n" + "Проголосовало: " + question.voitedUsers.size + question.variants.head.answers.aggregate("\n")((c,ans) =>  c + "# "+ans.user.get.name +"---" + ans.answer + "\n", _ + _)
 
   }
+
+//  def makeHistogram(question: Question): String = {
+//    val maxLen = 15
+//
+//  }
 
   def getAnonChoiceResult(question: Question): String = {
     question.name + "\n" + "Проголосовало: " + question.voitedUsers.size + question.variants.aggregate("\n")((b,variant) => b+variant.name+": " + variant.answers.size + "\n", _ + _)
