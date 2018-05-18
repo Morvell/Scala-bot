@@ -15,7 +15,7 @@ class CommandParser extends RegexParsers {
     val stopTime = startTime
 
     ("/create_poll" ~> "(" ~> pollName <~ ")") ~ anonymity.? ~ continuous.? ~ startTime.? ~ stopTime.? ^^
-      { case name ~ anon ~ cont ~ start ~ stop => Matcher.CreatePoolM(name, anon, cont, start, stop) } //TODO case ~ ACCEPT
+      { case name ~ anon ~ cont ~ start ~ stop => Matcher.CreatePollM(name, anon, cont, start, stop) } //TODO case ~ ACCEPT
   }
 
   def list: Parser[Command] = """^/list""".r ^^ { _ => Matcher.ListM() }

@@ -6,28 +6,28 @@ import org.scalatest.{FlatSpec, Matchers}
 class CommandParserTest extends FlatSpec with Matchers{
   private val parser = CommandParser
 
- "/create_poll (my_poll) (no) (afterstop))" should Matcher.CreatePoolM.toString() in {
+ "/create_poll (my_poll) (no) (afterstop))" should Matcher.CreatePollM.toString() in {
    val result = parser("/create_poll (my_poll) (no) (afterstop))")
-   result.get match { case c: Matcher.CreatePoolM =>
+   result.get match { case c: Matcher.CreatePollM =>
      c.name shouldBe "my_poll"
      c.anon shouldBe Some("no")
    }
-   result.get shouldBe a [Matcher.CreatePoolM]
+   result.get shouldBe a [Matcher.CreatePollM]
  }
 
 
-  "/create_poll (one_more_poll) (yes) (continuous) (13:22:00 18:03:26)" should Matcher.CreatePoolM.toString() in {
+  "/create_poll (one_more_poll) (yes) (continuous) (13:22:00 18:03:26)" should Matcher.CreatePollM.toString() in {
     val result = parser("/create_poll (one_more_poll) (yes) (continuous) (13:22:00 18:03:26)")
-    result.get match { case c: Matcher.CreatePoolM =>
+    result.get match { case c: Matcher.CreatePollM =>
       c.name shouldBe "one_more_poll"
       c.anon shouldBe Some("yes")
     }
-    result.get shouldBe a [Matcher.CreatePoolM]
+    result.get shouldBe a [Matcher.CreatePollM]
   }
 
-  "/create_poll (one_more_poll) (yes) (continuous) (13:22:00 18:03:26) (15:22:00 18:03:26)" should Matcher.CreatePoolM.toString() in {
+  "/create_poll (one_more_poll) (yes) (continuous) (13:22:00 18:03:26) (15:22:00 18:03:26)" should Matcher.CreatePollM.toString() in {
     val result = parser("/create_poll (one_more_poll) (yes) (continuous) (13:22:00 18:03:26) (15:22:00 18:03:26)")
-    result.get shouldBe a [Matcher.CreatePoolM]
+    result.get shouldBe a [Matcher.CreatePollM]
   }
 
   "/start_poll (0)" should Matcher.StartM.toString() in {
