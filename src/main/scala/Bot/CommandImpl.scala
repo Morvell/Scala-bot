@@ -171,7 +171,7 @@ object CommandImpl extends Repository {
   def end(): String = {
     context.map { id =>
       context = None
-      s"🤓 You can try typing */result* ($id)*"
+      s"🤓 You can try typing */result ($id)*"
     }.getOrElse(s"Ah, you probably forgot to /begin 😌")
   }
 

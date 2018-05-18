@@ -38,8 +38,10 @@ object App {
         s"\n/end - leave current poll"
     } match {
       case CommandParser.Success(response, _) => response.toString
-      case CommandParser.Failure(text, _) => text
-      case CommandParser.Error(text, _) => text
+      case CommandParser.Failure(text, _) =>
+        if (text.contains("expected")) s"```$text```" else text
+      case CommandParser.Error(text, _) =>
+        if (text.contains("expected")) s"```$text```" else text
     }
   }
 }
