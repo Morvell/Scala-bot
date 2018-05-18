@@ -1,8 +1,6 @@
 package Bot
 
-import Bot.Matcher.StartM
-import org.scalactic.Fail
-import org.scalatest.{FlatSpec, FunSuite, Matchers}
+import org.scalatest.{FlatSpec, Matchers}
 
 
 class CommandParserTest extends FlatSpec with Matchers{
@@ -35,6 +33,11 @@ class CommandParserTest extends FlatSpec with Matchers{
   "/start_poll (0)" should Matcher.StartM.toString() in {
     val result = parser("/start_poll (0)")
     result.get match { case c: Matcher.StartM => c.d shouldBe 0}
+    result.get shouldBe a [Matcher.StartM]
+  }
+
+  "/begin (" should "fail" in {
+    val result = parser("/begin (")
     result.get shouldBe a [Matcher.StartM]
   }
 

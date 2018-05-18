@@ -112,7 +112,7 @@ class CommandImplTest extends FlatSpec with Matchers with BeforeAndAfterEach {
   "DeletePoll" should  "Success delete" in {
     val r1 = CommandImpl.createPoll("test",Option("yes"),Option("test"),Option("13:22:00 18:02:18"),Option("13:22:00 18:03:99"))
     CommandImpl.deletePoll(r1, User(CommandImpl.getPollById(r1).admin,"")) shouldBe "Poll deleted successfully"
-    CommandImpl.getPoolByIdOption(r1).isDefined shouldBe false
+    CommandImpl.polls.get(r1) shouldBe false
   }
 
 
