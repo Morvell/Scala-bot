@@ -34,7 +34,8 @@ object App {
         s"\n/view - view all poll questions" +
         s"\n/add\\_question - add question to the poll" +
         s"\n/delete\\_question - delete question" +
-        s"\n/answer - answer to the question"
+        s"\n/answer - answer to the question" +
+        s"\n/end - leave current poll"
     } match {
       case CommandParser.Success(response, _) => response.toString
       case CommandParser.Failure(text, _) => text

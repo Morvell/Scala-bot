@@ -161,28 +161,29 @@ object CommandImpl extends Repository {
       return s"Can't find such poll 👻. Maybe it doesn't exist?"
     context = Option(id)
     s"🤓 Okay, now you can:" +
-      s"\n*/add_question* _(<question>)_ _(open|choice|multi)_," +
-      s"\n*/delete_question* _(<question number>)_," +
-      s"\n*/answer* _(<question number>)_ _(<answer>)_ or */view* results." +
-      s"\nAnd don't forget to */end* 😉"
+      s"\n/add\\_question _(<question>)_ _(open|choice|multi)_," +
+      s"\n/delete\\_question _(<question number>)_," +
+      s"\n/answer _(<question number>)_ _(<answer>)_ or" +
+      s"\n/view all questions" +
+      s"\nAnd don't forget to /end 😉"
   }
 
   def end(): String = {
     context.map { id =>
       context = None
       s"🤓 You can try typing */result* ($id)*"
-    }.getOrElse(s"Ah, you probably forgot to */begin* 😌.")
+    }.getOrElse(s"Ah, you probably forgot to /begin 😌")
   }
 
   def view(): String = {
-    getPollByIdOption(context.getOrElse(return s"Ah, you probably forgot to */begin* 😌.")).map { poll =>
+    getPollByIdOption(context.getOrElse(return s"Ah, you probably forgot to /begin 😌")).map { poll =>
       PollCommand.getView(poll)
 
     }.getOrElse(s"Can't find such poll 👻. Maybe it doesn't exist?")
   }
 
   def addQuestion(name: String, typeOfQuestion: String, list: List[String], userIDE:User): String = {
-    getPollByIdOption(context.getOrElse(return s"Ah, you probably forgot to */begin* 😌.")).map { poll =>
+    getPollByIdOption(context.getOrElse(return s"Ah, you probably forgot to /begin 😌")).map { poll =>
       if (!checkRoot(poll, userIDE.id))
         return s"😟 Sorry, you don't have enough permissions for doing this"
       val question = Question(name,typeOfQuestion, HashSet[User](),list.map(e => Variant(e, Nil)))
@@ -193,7 +194,7 @@ object CommandImpl extends Repository {
   }
 
   def deleteQuestion(id:Int, userIDE:User): String = {
-    getPollByIdOption(context.getOrElse(return s"Ah, you probably forgot to */begin* 😌.")).map { poll =>
+    getPollByIdOption(context.getOrElse(return s"Ah, you probably forgot to /begin 😌")).map { poll =>
       if (!checkRoot(poll, userIDE.id))
         return s"😟 Sorry, you don't have enough permissions for doing this"
       putInRep(context.get, PollCommand.deleteQuestionById(poll,id))
@@ -214,7 +215,7 @@ object CommandImpl extends Repository {
       putInRep(cont, a)
       "✔ Thank you for voting"
 
-    }).getOrElse(s"Ah, you probably forgot to */begin* 😌.")
+    }).getOrElse(s"Ah, you probably forgot to /begin 😌")
   }
 
   def addAnswerChoice(id:Int, list: List[Int], user: User): String = {
@@ -231,6 +232,6 @@ object CommandImpl extends Repository {
         putInRep(cont, a)
       }
       "✔ Thank you for voting"
-    }).getOrElse(s"Ah, you probably forgot to */begin* 😌.")
+    }).getOrElse(s"Ah, you probably forgot to /begin 😌")
   }
 }

@@ -7,7 +7,7 @@ import info.mukel.telegrambot4s.models._
 
 
 object Telegram extends TelegramBot with Polling with Commands {
-  def token = "573006448:AAGrctoQC8SpzkNe8HWdpxUGj6JzO8-IxU4"
+  def token = "531765707:AAFIOaj6SKOnBGB7sJiPOmgQ500wldHBsos"
 
   override def receiveMessage(msg: Message): Unit = {
     val name = s"${msg.from.get.firstName} ${msg.from.get.lastName.getOrElse("")}"

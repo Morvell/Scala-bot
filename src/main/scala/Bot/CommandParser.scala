@@ -76,7 +76,7 @@ class CommandParser extends RegexParsers {
 
   val rlt: Parser[Command] = createPoll | list | delete | start | stop | result |
     begin | end |view | answerOpen | deleteQuestion | addQuestionChoice | addQuestionOpen |
-    answerChoice | answerMulti | help | failure(s"Oops, I don't know this command 🤔. Try typing */help*")
+    answerChoice | answerMulti | help | failure(s"Oops, I don't know this command 🤔. Try typing /help")
 
 
   def apply(input: String): ParseResult[Command] = parse(rlt, input)
