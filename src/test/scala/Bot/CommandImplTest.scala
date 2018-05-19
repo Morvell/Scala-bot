@@ -20,9 +20,9 @@ class CommandImplTest extends FlatSpec with Matchers with BeforeAndAfterEach {
     val r1 = CommandImpl.createPoll("test",Option("yes"),Option("test"),Option("13:22:00 18:03:26"),Option("13:22:00 18:03:26"))
     val r2 = CommandImpl.createPoll("test",Option("yes"),Option("test"),Option("13:22:00 18:03:26"),Option("13:22:00 18:03:26"))
     val r3 = CommandImpl.createPoll("test",Option("yes"),Option("test"),Option("13:22:00 18:03:26"),Option("13:22:00 18:03:26"))
-    CommandImpl.removeFromRep(r3)
+    CommandImpl.removePoll(r3)
     val r4 = CommandImpl.createPoll("test",Option("yes"),Option("test"),Option("13:22:00 18:03:26"),Option("13:22:00 18:03:26"))
-    CommandImpl.removeFromRep(r3)
+    CommandImpl.removePoll(r3)
     r1 should not be r2
     r2 should not be r3
     r3 should not be r4
@@ -240,7 +240,6 @@ class CommandImplTest extends FlatSpec with Matchers with BeforeAndAfterEach {
     val r = PollCommand.getAnonChoiceResult(CommandImpl.getPollById(r2).questions.head)
     val a = "\n⋅    1: _2_\n⋅    2: _0_\n⋅    3: _0_\n"
     assert(r == a)
-
   }
 
   "/result" should "choice None Anon" in {

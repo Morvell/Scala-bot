@@ -3,12 +3,10 @@ package Bot
 import java.util.Date
 
 object App {
-
   def responseToLine(line: String, user: User): String = {
     val result = CommandParser(line.trim)
     result.map {
-      case c: Matcher.CreatePollM =>
-        CommandImpl.createPollView(CommandImpl.createPoll(c.name,c.anon,c.cont,c.start,c.stop, user), c.name)
+      case c: Matcher.CreatePollM => CommandImpl.createPoll(c.name,c.anon,c.cont,c.start,c.stop, user)
       case c: Matcher.ListM => CommandImpl.listPolls()
       case c: Matcher.DeleteM => CommandImpl.deletePoll(c.d,user)
       case c: Matcher.StartM => CommandImpl.startPoll(c.d, new Date(), user)

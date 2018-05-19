@@ -2,55 +2,44 @@ package Bot
 
 import java.util.Date
 
-case class Poll(name : String, id : Int,
-                admin : Long,
-                anonymity : Boolean = true,
-                continuousOrAfterstop : Boolean = false,
-                start_time : Option[Date] = None,
-                end_time : Option[Date] = None,
-                questions : List[Question] = List(),
+case class Poll(name: String,
+                id: Int,
+                admin: Long,
+                anonymity: Boolean = true,
+                continuousOrAfterstop: Boolean = false,
+                start_time: Option[Date] = None,
+                end_time: Option[Date] = None,
+                questions: List[Question] = List(),
                )
 
-
 object PollCommand {
+  def addQuestion(poll: Poll, q:Question): Poll = poll.copy(questions = poll.questions :+ q)
 
-  def addQuestion(poll: Poll, q:Question): Poll = {
-    poll.copy(questions = poll.questions :+ q)
-  }
-
-  def updateQuestion(poll: Poll, id:Int, q:Question): Poll = {
+  def updateQuestion(poll: Poll, id:Int, q:Question): Poll =
     poll.copy(questions = poll.questions.updated(id,q))
-  }
 
-  def deleteQuestion(poll: Poll, q:Question) : Poll = {
+  def deleteQuestion(poll: Poll, q:Question) : Poll =
     poll.copy(questions = poll.questions.filter(_ != q))
-  }
 
-  def deleteQuestionById(poll: Poll, id:Int) : Poll = {
+  def deleteQuestionById(poll: Poll, id:Int) : Poll =
     deleteQuestion(poll, poll.questions(id))
-  }
 
-  def active(poll: Poll, date: Date): Boolean = {
-    if(poll.start_time.isEmpty) return false
+  def active(poll: Poll, date: Date): Boolean =
+    if(poll.start_time.isEmpty) false
+    else {
+      val t = poll.end_time.getOrElse(new Date())
+      val a1 = t.after(date)
+      val a2 = poll.start_time.get.before(date)
+      a1 && a2
+    }
 
-    val t = poll.end_time.getOrElse(new Date())
+  def start(poll: Poll, date: Date): Poll =
+    if (poll.start_time.isDefined) poll
+    else poll.copy(start_time = Option(date))
 
-    val a1 = t.after(date)
-
-    val a2 = poll.start_time.get.before(date)
-
-    a1 && a2
-  }
-
-  def start(poll: Poll, date: Date): Poll = {
-    if (poll.start_time.isDefined) return poll
-    poll.copy(start_time = Option(date))
-  }
-
-  def stop(poll: Poll, date: Date): Poll = {
-    if (poll.end_time.isDefined) return poll
-    poll.copy(end_time = Option(date))
-  }
+  def stop(poll: Poll, date: Date): Poll =
+    if (poll.end_time.isDefined) poll
+    else poll.copy(end_time = Option(date))
 
   def getView(poll: Poll) : String = {
     val result = for ((q, i) <- poll.questions.zipWithIndex) yield {
@@ -92,7 +81,7 @@ object PollCommand {
   }
 
   def getQuestionInfo(question: Question): String = {
-    s"👉 `${question.name}` 👈, voted ${question.voitedUsers.size} people:"
+    s"👉 `${question.name}` 👈, voted ${question.votedUsers.size} people:"
   }
 
   def getAnonOpenResult(question: Question): String = {
