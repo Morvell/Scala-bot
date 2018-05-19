@@ -12,13 +12,9 @@ import scala.collection.immutable.HashSet
 trait Repository {
   var polls: Map[Int, Poll] = immutable.Map[Int, Poll]()
 
-  def updatePoll(pollId: Int, poll: Poll) {
-    polls += pollId -> poll
-  }
+  def updatePoll(pollId: Int, poll: Poll): Unit = polls += pollId -> poll
 
-  def removePoll(pollId: Int) {
-    polls -= pollId
-  }
+  def removePoll(pollId: Int): Unit = polls -= pollId
 
   def getPollById(id: Int): Either[String, Poll] =
     if (polls.contains(id)) Right(polls(id)) else Left(Answers.noSuchPoll)
@@ -41,16 +37,13 @@ trait Context {
     this.context += userId -> context
   }
 
-  def removeContext(userId: Long) {
-    context -= userId
-  }
+  def removeContext(userId: Long): Unit = context -= userId
 
   def isInContext(userId: Long): Boolean = context.contains(userId)
 
-  def getContextById(id: Long): Either[String, Int] = {
+  def getContextById(id: Long): Either[String, Int] =
     if (!context.contains(id)) Left(Answers.youForgotToBegin)
     else Right(context(id))
-  }
 }
 
 
@@ -62,71 +55,59 @@ object CommandImpl extends Repository with Context {
 
   val userID: Iterator[Int] = Stream.from(0).iterator
 
-  def getMaxID: Int = {
-    maxId.next()
-  }
+  def getMaxID: Int = maxId.next()
 
-  def parseTime(time: Option[String]): Option[Date] = {
+  def parseTime(time: Option[String]): Option[Date] =
     if (time.isDefined)
       Option(formatDate.parse(time.getOrElse(formatDate.format(new Date))))
     else
       None
-  }
 
-  def getTimeFromFormat(string: String): Date = {
-    formatDate.parse(string)
-  }
+  def getTimeFromFormat(string: String): Date = formatDate.parse(string)
 
   def createPoll(name: String, anonymityVar: Option[String], continuousOrAfterstopVar: Option[String],
-                 startTimeVar: Option[String], stopTimeVar: Option[String], user: User = User(0, "")): Int = {
+                 startTimeVar: Option[String], stopTimeVar: Option[String], user: User = User(0, "")): String = {
     val anonymity = anonymityVar.getOrElse("yes") == "yes"
-
     val continuousOrAfterstop = continuousOrAfterstopVar.getOrElse("afterstop") == "continuous"
-
     val id = getMaxID
-
     updatePoll(id, Poll(name, id, user.id, anonymity,
       continuousOrAfterstop, parseTime(startTimeVar), parseTime(stopTimeVar)))
 
-    id
+    Answers.pollWasCreated(id, name)
   }
-
-  def createPollView(id: Int, name: String): String =
-    s"😇 Poll *$name* was created, here is your poll id:\n👉 `$id` 👈\n" +
-      s"🦄 Type */begin ($id)* to continue"
 
   def listPolls(): String =
     if (polls.isEmpty)
       Answers.noPolls
     else
-      s"👉 Current polls:\n${polls.aggregate("")((s, p) => s"$s *${p._1})* ${p._2.name}\n", _ + _)}"
+      Answers.listPolls(polls.values)
 
   def deletePoll(id: Int, user: User): String =
     getPollForUser(id, user.id).map(_ => {
       removePoll(id)
-      s"Poll deleted successfully 😈"
+      Answers.pollWasDeleted
     }).merge
 
   def startPoll(id: Int, date: Date, user: User): String =
     getPollForUser(id, user.id).map(poll => {
       if (PollCommand.active(poll, date) || poll.start_time.isDefined) {
-        s"👌 Poll is running"
+        Answers.pollIsRunning
       } else if (poll.start_time.isEmpty) {
         updatePoll(id, PollCommand.start(poll, date))
-        s"🤘 Poll has started"
-      } else s"Can't start poll *$id* for some reason 😕"
+        Answers.pollWasStarted
+      } else Answers.cantStartPoll(id)
     }).merge
 
   def stopPoll(id: Int, date: Date, user: User): String =
     getPollForUser(id, user.id).map(poll => {
       if (!PollCommand.active(poll, date)) {
-        s"Poll isn't active 😤. Be patient."
+        Answers.pollIsNotActive
       } else if (poll.end_time.isEmpty) {
         updatePoll(id, PollCommand.stop(poll, date))
-        s"Poll is stopped ⛔"
+        Answers.pollIsStopped
       }
       else {
-        s"Don't worry, poll will stop automatically 😉"
+        Answers.pollWillStartAutomatically
       }
     }).merge
 
@@ -136,18 +117,13 @@ object CommandImpl extends Repository with Context {
   def begin(id: Int, user: User): String =
     getPollById(id).map(_ => {
       setContext(user.id, id)
-      s"🤓 Okay, now you can:" +
-        s"\n/add\\_question _(<question>)_ _(open|choice|multi)_," +
-        s"\n/delete\\_question _(<question number>)_," +
-        s"\n/answer _(<question number>)_ _(<answer>)_ or" +
-        s"\n/view all questions" +
-        s"\nAnd don't forget to /end 😉"
+      Answers.afterBeginHint
     }).merge
 
   def end(user: User): String =
     getContextById(user.id).map(pollId => {
       removeContext(user.id)
-      s"Wow, now you can */result ($pollId)*"
+      Answers.afterEndHint(pollId)
     }).merge
 
   def view(user: User): String =
@@ -159,51 +135,50 @@ object CommandImpl extends Repository with Context {
       .map(poll => {
         val question = Question(name, typeOfQuestion, HashSet[User](), list.map(e => Variant(e, Nil)))
         updatePoll(poll.id, PollCommand.addQuestion(poll, question))
-        s"👌 Question _'$name'_ was added *(${poll.questions.size})*"
+        Answers.questionWasAdded(name, poll.questions.size)
       }).merge
 
   def deleteQuestion(questionId: Int, user: User): String =
     getQuestionForUser(questionId, user.id).map {
       case (poll, _) =>
         updatePoll(poll.id, PollCommand.deleteQuestionById(poll, questionId))
-        s"🤞 Question was deleted"
+        Answers.questionWasDeleted
     }.merge
 
   def addAnswerOpen(questionId: Int, answer: String, user: User): String =
     getQuestionForUser(questionId, user.id).map {
       case (poll, question) =>
-        if (question.voitedUsers.contains(user))
-          s"Hey, you can't vote twice! 🇷🇺"
+        if (question.votedUsers.contains(user))
+          Answers.cantVoteTwice
         else if (question.typeOfQuestion != "open")
-          s"😤 Nah, this is a *${question.typeOfQuestion}* question"
+          Answers.badQuestionType(question.typeOfQuestion)
         else {
           val updatedQuestion = QuestionHandler.addAnswer(poll.questions(questionId),
             poll.anonymity, 0, Answer(answer, Some(user)))
-          updatePoll(poll.id, PollCommand.updateQuestion(poll, questionId, b))
-          "✔ Thank you for voting"
+          updatePoll(poll.id, PollCommand.updateQuestion(poll, questionId, updatedQuestion))
+          Answers.thanksForVoting
         }
     }.merge
 
   def addAnswerChoice(questionId: Int, list: List[Int], user: User): String =
     getQuestionForUser(questionId, user.id).map {
       case (poll, question) =>
-        if (question.voitedUsers.contains(user))
-          s"Hey, you can't vote twice! 🇷🇺"
+        if (question.votedUsers.contains(user))
+          Answers.cantVoteTwice
         else if (question.typeOfQuestion == "choice" && list.size > 1)
-          s"😤 Nah, this is a *${question.typeOfQuestion}* question." +
-            s"You can take only 1️⃣ option"
+          Answers.badQuestionType(question.typeOfQuestion)
         else {
           for (i <- list) yield {
             val updatedQuestion = QuestionHandler.addAnswerMulti(question, poll.anonymity, i, Answer("", Option(user)))
             updatePoll(poll.id, PollCommand.updateQuestion(poll, questionId, updatedQuestion))
           }
-          val updatedQuestion = QuestionHandler.addInVoitedUser(question, Answer("", Option(user)))
+          val updatedQuestion = QuestionHandler.addVotedUser(question, Answer("", Option(user)))
           updatePoll(poll.id, PollCommand.updateQuestion(poll, questionId, updatedQuestion))
-          "✔ Thank you for voting"
+          Answers.thanksForVoting
         }
     }.merge
 
-  def printHelp(): String = {
+  def printHelp(): String =
     s"👾 *Available commands:*" +
       s"\n/create\\_poll - create new poll" +
       s"\n/list - list current polls" +
@@ -218,6 +193,4 @@ object CommandImpl extends Repository with Context {
       s"\n/delete\\_question - delete question" +
       s"\n/answer - answer to the question" +
       s"\n/end - leave current poll"
-  }
-
 }
