@@ -53,85 +53,62 @@ object PollCommand {
   }
 
   def getView(poll: Poll) : String = {
-
-
-    val result = for (q <- poll.questions) yield {
+    val result = for ((q, i) <- poll.questions.zipWithIndex) yield {
       q.typeOfQuestion match {
-        case "multi" => getViewChoiceResult(q)
-        case "choice" => getViewChoiceResult(q)
-        case "open" => getViewOpenResult(q)
+        case "multi" => s"*$i)* ${q.name} _(multi)_:\n${getAggregatedOptions(q)}"
+        case "choice" => s"*$i)* ${q.name} _(choice)_:\n${getAggregatedOptions(q)}"
+        case "open" => s"*$i)* ${q.name} _(open)_"
       }
-
     }
-    result.aggregate("")((b, str) => b + str + "\n", _ + _)
-
-
+    s"👀 Poll *'${poll.name}'* has ${poll.questions.size} questions:\n${result.mkString("\n")}"
   }
 
-  def getViewOpenResult(question: Question): String = {
-    question.name +" open голосование" + "\n"
+  def getAggregatedOptions(question: Question): String = {
+    question.variants.map(x => x.name).mkString("\n")
   }
-
-  def getViewChoiceResult(question: Question): String = {
-    val id = Stream.from(0).iterator
-    question.name +" " + question.typeOfQuestion + " голосование" + question.variants.aggregate("\n")((b,variant) => b+"  "+id.next() + ") "+variant.name+"\n", _ + _)
-
-  }
-
-
 
   def getResult(poll: Poll, date: Date) : String = {
     if (active(poll, date) && !poll.continuousOrAfterstop) {
-      "Can not see before finished"
+      s"Poll results are hidden until _${poll.end_time.getOrElse(new Date())}_ ⏰"
   } else {
-    poll.anonymity match {
-      case true => {
-        val result = for (q <- poll.questions) yield {
+      val result = for (q <- poll.questions) yield {
+        val questionResult = if (poll.anonymity) {
           q.typeOfQuestion match {
             case "multi" => getAnonChoiceResult(q)
             case "choice" => getAnonChoiceResult(q)
             case "open" => getAnonOpenResult(q)
           }
-
-        }
-        result.aggregate("")((b,str) => b + str +"\n",_ + _)
-      }
-      case false => {
-        val result = for (q <- poll.questions) yield {
+        } else {
           q.typeOfQuestion match {
             case "multi" => getNonAnonChoiceResult(q)
             case "choice" => getNonAnonChoiceResult(q)
             case "open" => getNonAnonOpenResult(q)
           }
+        }
+        getQuestionInfo(q) + questionResult
       }
-        result.aggregate("")((b,str) => b + str +"\n",_ + _)
-  }}}
+      s"👀 Poll *'${poll.name}'* results:\n${result.mkString("\n")}"
+    }
+  }
+
+  def getQuestionInfo(question: Question): String = {
+    s"👉 `${question.name}` 👈, voted ${question.voitedUsers.size} people:"
   }
 
   def getAnonOpenResult(question: Question): String = {
-    question.name + "\n" + "Проголосовало: " + question.voitedUsers.size + question.variants.head.answers.aggregate("\n")((c,ans) =>  c + "# " + ans.answer + "\n", _ + _)
-//    question.aggregate("\n")((a,b) => a + b.name + "\n" + "Проголосовало: " + b.voitedUsers.size + "\n" + b.variants.head.answers.aggregate("\n")((c,ans) =>  c + "# " + ans.answer + "\n", _ + _) + "\n", _ + _)
+    question.variants.head.answers.aggregate("\n")((c,ans) =>  c + s"⋅    ${ans.answer}\n", _ + _)
   }
 
   def getNonAnonOpenResult(question: Question): String = {
-
-    question.name + "\n" + "Проголосовало: " + question.voitedUsers.size + question.variants.head.answers.aggregate("\n")((c,ans) =>  c + "# "+ans.user.get.name +"---" + ans.answer + "\n", _ + _)
-
+    question.variants.head.answers.aggregate("\n")((c,ans) =>  c + s"⋅    ${ans.user.get.name}: ${ans.answer}\n", _ + _)
   }
 
-//  def makeHistogram(question: Question): String = {
-//    val maxLen = 15
-//    question.
-//
-//  }
-
   def getAnonChoiceResult(question: Question): String = {
-    question.name + "\n" + "Проголосовало: " + question.voitedUsers.size + question.variants.aggregate("\n")((b,variant) => b+"  " +variant.name+": " + variant.answers.size + "\n", _ + _)
-
+    question.variants.aggregate("\n")((b,variant) => b + s"⋅    ${variant.name}: _${variant.answers.size}_\n", _ + _)
   }
 
   def getNonAnonChoiceResult(question: Question): String = {
-    question.name + "\n" + "Проголосовало: " + question.voitedUsers.size + question.variants.aggregate("\n")((b,variant) => b+"  " + variant.name+": " + variant.answers.size + "\n" + "Голосовали: " + variant.answers.aggregate("")((k, ans) => k + ans.user.get.name + ",", _ + _) + "\n", _ + _)
-
+    question.variants.aggregate("\n")((b,variant) => b + s"⋅    ${variant.name}: _${variant.answers.size}_\n" +
+      variant.answers.aggregate("")((k, ans) => k + s"⁘      _(${ans.user.get.name})_", _ + _) + "\n", _ + _)
   }
 }

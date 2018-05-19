@@ -3,8 +3,8 @@ package Bot
 import java.text.SimpleDateFormat
 import java.util.Date
 
+import scala.collection.immutable
 import scala.collection.immutable.HashSet
-import scala.collection.{immutable, mutable}
 
 
 trait Repository {
@@ -28,7 +28,7 @@ trait Repository {
     polls(id)
   }
 
-  def getPoolByIdOption(id: Int): Option[Poll] = {
+  def getPollByIdOption(id: Int): Option[Poll] = {
     polls.get(id)
   }
 }
@@ -50,12 +50,7 @@ object CommandImpl extends Repository {
     maxId.next()
   }
 
-  def worker(string: String): Unit = {
-    println(string)
-  }
-
   def startTime(time: Option[String]): Option[Date] = {
-
     if (time.isDefined) {
       return Option(formatDate.parse(time.getOrElse(formatDate.format(new Date))))
     }
@@ -92,63 +87,65 @@ object CommandImpl extends Repository {
 
     putInRep(id, Poll(name,id, user.id, anonymity, continuousOrAfterstop, startTime1, stopTime1))
 
+    id
+  }
 
-    id //TODO более отзывчиво
+  def createPollView(id: Int, name: String): String = {
+    s"😇 Poll *$name* was created, here is your poll id:\n👉 `$id` 👈\n" +
+      s"🦄 Type */begin ($id)* to continue"
   }
 
   def listPolls(): String = {
-    val a = getRep.getOrElse(0, return "Еще нет пулов")
-    getRep.aggregate("Current polls: \n")((s, p) => s"$s ${p._1} :   ${p._2.name}\n", _ + _)
+    if (getRep.isEmpty)
+      return s"😐 No polls created yet."
+    s"👉 Current polls:\n${getRep.aggregate("")((s, p) => s"$s *${p._1})* ${p._2.name}\n", _ + _)}"
   }
 
   def deletePoll(id: Int, userIDE: User): String = {
-    if (getRep.isEmpty) return "Тебе еще рано об этом задумываться"
     getRep.get(id).map { poll =>
-      if (!checkRoot(poll, userIDE.id)) return "У тебя здесь нет прав"
+      if (!checkRoot(poll, userIDE.id))
+        return s"😟 Sorry, you don't have enough permissions for doing this"
       removeFromRep(id)
-      "Poll deleted successfully"
-    }.getOrElse("Error: poll is not exist")
-
+      s"Poll deleted successfully 😈"
+    }.getOrElse(s"Can't find such poll 👻. Maybe it doesn't exist?")
   }
 
   def startPoll(id: Int, date: Date, userIDE:User): String = {
-    getPoolByIdOption(id).map { poll =>
-      if (!checkRoot(poll, userIDE.id)) return "У тебя здесь нет прав"
-      if (PollCommand.active(poll, date)) {
-        return "Уже запущен"
+    getPollByIdOption(id).map { poll =>
+      if (!checkRoot(poll, userIDE.id))
+        return s"😟 Sorry, you don't have enough permissions for doing this"
+      if (PollCommand.active(poll, date) || poll.start_time.isDefined) {
+        return s"👌 Poll is running"
       }
-
-      if (poll.start_time.isDefined) return "Уже запущен"
 
       if (poll.start_time.isEmpty) {
         putInRep(id, PollCommand.start(poll, date))
-        return "The poll is started successfully"
+        return s"🤘 Poll has started"
       }
-      return "Error"
+      return s"Can't start poll *$id* for some reason 😕"
 
-    }.getOrElse("Error : poll is not exist")
-
+    }.getOrElse(s"Can't find such poll 👻. Maybe it doesn't exist?")
   }
 
 
   def stopPoll(id: Int, date: Date, userIDE:User): String = {
-
-    getPoolByIdOption(id).map { poll =>
-      if (!checkRoot(poll, userIDE.id)) return "У тебя здесь нет прав"
+    getPollByIdOption(id).map { poll =>
+      if (!checkRoot(poll, userIDE.id))
+        return s"😟 Sorry, you don't have enough permissions for doing this"
       if (!PollCommand.active(poll, date)) {
-        return "Опрос еще не запущен"
+        return s"Poll isn't active 😤. Be patient."
       }
       if (poll.end_time.isEmpty) {
         putInRep(id, PollCommand.stop(poll, date))
-        return "The poll is stopped successfully"
+        return s"Poll is stopped ⛔"
       }
       else {
-        return "Error: опрос остановится автоматически"
+        return s"Don't worry, poll will stop automatically 😉"
       }
       putInRep(id, PollCommand.stop(poll, date))
-      return "The poll is stopped successfully"
+      return s"Poll was stopped ⛔"
 
-    }.getOrElse("Error: poll is not exist")
+    }.getOrElse(s"Can't find such poll 👻. Maybe it doesn't exist?")
 
   }
 
@@ -156,78 +153,85 @@ object CommandImpl extends Repository {
   def pollResult(id: Int): String = {
     getRep.get(id).map { poll =>
       PollCommand.getResult(getPollById(id), new Date)
-    }.getOrElse("Error: poll is not exist")
+    }.getOrElse(s"Can't find such poll 👻. Maybe it doesn't exist?")
   }
 
   def begin(id: Int): String = {
-    if (!getRep.contains(id)) return "Нет такого контекста"
+    if (!getRep.contains(id))
+      return s"Can't find such poll 👻. Maybe it doesn't exist?"
     context = Option(id)
-    "Контекст переключен на " + id
+    s"🤓 Okay, now you can:" +
+      s"\n/add\\_question _(<question>)_ _(open|choice|multi)_," +
+      s"\n/delete\\_question _(<question number>)_," +
+      s"\n/answer _(<question number>)_ _(<answer>)_ or" +
+      s"\n/view all questions" +
+      s"\nAnd don't forget to /end 😉"
   }
 
   def end(): String = {
-    context.map { a =>
+    context.map { id =>
       context = None
-      "Контекст отключен"
-    }.getOrElse("Контекст не известен")
+      s"🤓 You can try typing */result ($id)*"
+    }.getOrElse(s"Ah, you probably forgot to /begin 😌")
   }
 
   def view(): String = {
-    getPoolByIdOption(context.getOrElse(return "Тебе еще рано об этом задумываться")).map { poll =>
+    getPollByIdOption(context.getOrElse(return s"Ah, you probably forgot to /begin 😌")).map { poll =>
       PollCommand.getView(poll)
 
-    }.getOrElse("Error : не выбран контекст")
+    }.getOrElse(s"Can't find such poll 👻. Maybe it doesn't exist?")
   }
 
   def addQuestion(name: String, typeOfQuestion: String, list: List[String], userIDE:User): String = {
-    getPoolByIdOption(context.getOrElse(return "Тебе еще рано об этом задумываться")).map { poll =>
-      if (!checkRoot(poll, userIDE.id)) return "У тебя здесь нет прав"
+    getPollByIdOption(context.getOrElse(return s"Ah, you probably forgot to /begin 😌")).map { poll =>
+      if (!checkRoot(poll, userIDE.id))
+        return s"😟 Sorry, you don't have enough permissions for doing this"
       val question = Question(name,typeOfQuestion, HashSet[User](),list.map(e => Variant(e, Nil)))
-      putInRep(context.get,PollCommand.addQuestion(poll, question))
-      "Номер добавленного вопроса: " + poll.questions.size
+      putInRep(context.get, PollCommand.addQuestion(poll, question))
+      s"👌 Question _'$name'_ was added *(${poll.questions.size})*"
 
-    }.getOrElse("Error : не выбран контекст")
+    }.getOrElse(s"Can't find such poll 👻. Maybe it doesn't exist?")
   }
 
   def deleteQuestion(id:Int, userIDE:User): String = {
-    getPoolByIdOption(context.getOrElse(return "Тебе еще рано об этом задумываться")).map { poll =>
-      if (!checkRoot(poll, userIDE.id)) return "У тебя здесь нет прав"
+    getPollByIdOption(context.getOrElse(return s"Ah, you probably forgot to /begin 😌")).map { poll =>
+      if (!checkRoot(poll, userIDE.id))
+        return s"😟 Sorry, you don't have enough permissions for doing this"
       putInRep(context.get, PollCommand.deleteQuestionById(poll,id))
-      "Вопрос удален"
+      s"🤞 Question was deleted"
 
-    }.getOrElse("Error : не выбран контекст")
+    }.getOrElse(s"Can't find such poll 👻. Maybe it doesn't exist?")
   }
 
   def addAnswerOpen(id:Int, answer:String, user: User): String = {
-
     context.map(cont => {
-      val poll = getPoolByIdOption(cont).get
-      if (poll.questions(id).voitedUsers.contains(user)) return "Вы уже голосовали"
-      if (poll.questions(id).typeOfQuestion != "open") return "Вы ошиблись методом голосования"
-      val b = QuestionHandler.addAnswer(poll.questions(id),poll.anonymity,  0, Answer(answer,Option(user)))
+      val poll = getPollByIdOption(cont).get
+      if (poll.questions(id).voitedUsers.contains(user))
+        return s"Hey, you can't vote twice! 🇷🇺"
+      if (poll.questions(id).typeOfQuestion != "open")
+        return s"😤 Nah, this is a *${poll.questions(id).typeOfQuestion}* question"
+      val b = QuestionHandler.addAnswer(poll.questions(id),poll.anonymity, 0, Answer(answer,Option(user)))
       val a = PollCommand.updateQuestion(poll, id, b)
       putInRep(cont, a)
-      "Вы проголосовали"
+      "✔ Thank you for voting"
 
-    }).getOrElse("Нет контекста")
+    }).getOrElse(s"Ah, you probably forgot to /begin 😌")
   }
 
-
   def addAnswerChoice(id:Int, list: List[Int], user: User): String = {
-
     context.map(cont => {
       for(i <- list) yield {
-        val poll = getPoolByIdOption(cont).get
-        if (poll.questions(id).voitedUsers.contains(user)) return "Вы уже голосовали"
-        if (poll.questions(id).typeOfQuestion == "choice" && list.size>1) return "Вы ошиблись методом голосования"
+        val poll = getPollByIdOption(cont).get
+        if (poll.questions(id).voitedUsers.contains(user))
+          return s"Hey, you can't vote twice! 🇷🇺"
+        if (poll.questions(id).typeOfQuestion == "choice" && list.size>1)
+          return s"😤 Nah, this is a *${poll.questions(id).typeOfQuestion}* question." +
+            s"You can take only 1️⃣ option"
         val b = QuestionHandler.addAnswer(poll.questions(id),poll.anonymity,  i, Answer("",Option(user)))
         val a = PollCommand.updateQuestion(poll, id, b)
         putInRep(cont, a)
       }
-      "Вы проголосовали"
-    }).getOrElse("Нет контекста")
-
+      "✔ Thank you for voting"
+    }).getOrElse(s"Ah, you probably forgot to /begin 😌")
   }
-
-
 }
