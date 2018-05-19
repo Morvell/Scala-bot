@@ -6,14 +6,15 @@ import org.scalatest.{FlatSpec, Matchers}
 class CommandParserTest extends FlatSpec with Matchers{
   private val parser = CommandParser
 
- "/create_poll (my_poll) (no) (afterstop))" should Matcher.CreatePollM.toString() in {
-   val result = parser("/create_poll (my_poll) (no) (afterstop))")
-   result.get match { case c: Matcher.CreatePollM =>
-     c.name shouldBe "my_poll"
-     c.anon shouldBe Some("no")
-   }
-   result.get shouldBe a [Matcher.CreatePollM]
- }
+  "/create_poll (my_poll) (no) (afterstop))" should Matcher.CreatePollM.toString() in {
+    val result = parser("/create_poll (my_poll) (no) (afterstop))")
+    result.get match {
+      case c: Matcher.CreatePollM =>
+        c.name shouldBe "my_poll"
+        c.anon shouldBe Some("no")
+    }
+    result.get shouldBe a[Matcher.CreatePollM]
+  }
 
 
   "/create_poll (one_more_poll) (yes) (continuous) (13:22:00 18:03:26)" should Matcher.CreatePollM.toString() in {
@@ -36,10 +37,6 @@ class CommandParserTest extends FlatSpec with Matchers{
     result.get shouldBe a [Matcher.StartM]
   }
 
-  "/begin (" should "fail" in {
-    val result = parser("/begin (")
-    result.get shouldBe a [Matcher.StartM]
-  }
 
   "/result (0)" should Matcher.ResultM.toString() in {
     val result = parser("/result (0)")
@@ -47,7 +44,7 @@ class CommandParserTest extends FlatSpec with Matchers{
     result.get shouldBe a [Matcher.ResultM]
   }
 
-"/list" should Matcher.ListM.toString() in {
+  "/list" should Matcher.ListM.toString() in {
     val result = parser("/list")
     result.get shouldBe a [Matcher.ListM]
   }
@@ -98,29 +95,29 @@ class CommandParserTest extends FlatSpec with Matchers{
     result.get shouldBe a [Matcher.DeleteQuestionM]
   }
 
-//  "/add_question choice" should Matcher.AddQuestionChoiceM.toString() in {
-//    val result = parser("""/add_question (Test case) (choice)
-//        |One And A
-//        |Two""".stripMargin)
-//    result.get match { case c: Matcher.AddQuestionChoiceM =>
-//      c.q shouldBe "Test case"
-//      c.t shouldBe "choice"
-//      c.variant.tail.head shouldBe "Two"
-//    }
-//    result.get shouldBe a [Matcher.AddQuestionChoiceM]
-//  }
+  //  "/add_question choice" should Matcher.AddQuestionChoiceM.toString() in {
+  //    val result = parser("""/add_question (Test case) (choice)
+  //        |One And A
+  //        |Two""".stripMargin)
+  //    result.get match { case c: Matcher.AddQuestionChoiceM =>
+  //      c.q shouldBe "Test case"
+  //      c.t shouldBe "choice"
+  //      c.variant.tail.head shouldBe "Two"
+  //    }
+  //    result.get shouldBe a [Matcher.AddQuestionChoiceM]
+  //  }
 
-//  "/add_question multi" should Matcher.AddQuestionChoiceM.toString() in {
-//    val result = parser("""/add_question (Test multi) (multi)
-//                          |One And A
-//                          |Two""".stripMargin)
-//    result.get match { case c: Matcher.AddQuestionChoiceM =>
-//      c.q shouldBe "Test multi"
-//      c.t shouldBe "multi"
-//      c.variant.tail.head shouldBe "Two"
-//    }
-//    result.get shouldBe a [Matcher.AddQuestionChoiceM]
-//  }
+  //  "/add_question multi" should Matcher.AddQuestionChoiceM.toString() in {
+  //    val result = parser("""/add_question (Test multi) (multi)
+  //                          |One And A
+  //                          |Two""".stripMargin)
+  //    result.get match { case c: Matcher.AddQuestionChoiceM =>
+  //      c.q shouldBe "Test multi"
+  //      c.t shouldBe "multi"
+  //      c.variant.tail.head shouldBe "Two"
+  //    }
+  //    result.get shouldBe a [Matcher.AddQuestionChoiceM]
+  //  }
 
   "/add_question open" should Matcher.AddQuestionOpenM.toString() in {
     val result = parser("""/add_question (Test open) (open)""".stripMargin)

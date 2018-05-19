@@ -8,7 +8,7 @@ import scala.collection.immutable.HashSet
 
 
 trait Repository {
-  private var polls: Map[Int, Poll] = immutable.Map[Int, Poll]()
+  var polls: Map[Int, Poll] = immutable.Map[Int, Poll]()
 
   def putInRep(id: Int, poll: Poll) {
     polls = polls + (id -> poll)
@@ -88,12 +88,12 @@ object CommandImpl extends Repository with Context {
     None
   }
 
-  def checkRoot(poll: Poll, id:Long):Boolean = {
+  def checkRoot(poll: Poll, id: Long): Boolean = {
     poll.admin == id
   }
 
   def createPoll(name: String, anonymityVar: Option[String], continuousOrAfterstopVar: Option[String],
-                 startTimeVar: Option[String], stopTimeVar: Option[String], user: User = User(0,"")): Int = {
+                 startTimeVar: Option[String], stopTimeVar: Option[String], user: User = User(0, "")): Int = {
     val anonymity = anonymityVar.getOrElse("yes") == "yes"
 
     val continuousOrAfterstop = continuousOrAfterstopVar.getOrElse("afterstop") == "continuous"
@@ -104,7 +104,7 @@ object CommandImpl extends Repository with Context {
 
     val id = getMaxID
 
-    putInRep(id, Poll(name,id, user.id, anonymity, continuousOrAfterstop, startTime1, stopTime1))
+    putInRep(id, Poll(name, id, user.id, anonymity, continuousOrAfterstop, startTime1, stopTime1))
 
     id
   }
@@ -129,7 +129,7 @@ object CommandImpl extends Repository with Context {
     }.getOrElse(s"Can't find such poll 👻. Maybe it doesn't exist?")
   }
 
-  def startPoll(id: Int, date: Date, userIDE:User): String = {
+  def startPoll(id: Int, date: Date, userIDE: User): String = {
     getPollByIdOption(id).map { poll =>
       if (!checkRoot(poll, userIDE.id))
         return s"😟 Sorry, you don't have enough permissions for doing this"
@@ -147,7 +147,7 @@ object CommandImpl extends Repository with Context {
   }
 
 
-  def stopPoll(id: Int, date: Date, userIDE:User): String = {
+  def stopPoll(id: Int, date: Date, userIDE: User): String = {
     getPollByIdOption(id).map { poll =>
       if (!checkRoot(poll, userIDE.id))
         return s"😟 Sorry, you don't have enough permissions for doing this"
@@ -201,18 +201,18 @@ object CommandImpl extends Repository with Context {
     }.getOrElse(s"Can't find such poll 👻. Maybe it doesn't exist?")
   }
 
-  def addQuestion(name: String, typeOfQuestion: String, list: List[String], userIDE:User): String = {
+  def addQuestion(name: String, typeOfQuestion: String, list: List[String], userIDE: User): String = {
     getPollByIdOption(getContextById(userIDE.id).getOrElse(return s"Ah, you probably forgot to /begin 😌")).map { poll =>
       if (!checkRoot(poll, userIDE.id))
         return s"😟 Sorry, you don't have enough permissions for doing this"
-      val question = Question(name,typeOfQuestion, HashSet[User](),list.map(e => Variant(e, Nil)))
+      val question = Question(name, typeOfQuestion, HashSet[User](), list.map(e => Variant(e, Nil)))
       putInRep(getContextById(userIDE.id).get, PollCommand.addQuestion(poll, question))
       s"👌 Question _'$name'_ was added *(${poll.questions.size})*"
 
     }.getOrElse(s"Can't find such poll 👻. Maybe it doesn't exist?")
   }
 
-  def deleteQuestion(id:Int, userIDE:User): String = {
+  def deleteQuestion(id: Int, userIDE: User): String = {
     getPollByIdOption(getContextById(userIDE.id).getOrElse(return s"Ah, you probably forgot to /begin 😌")).map { poll =>
       if (!checkRoot(poll, userIDE.id))
         return s"😟 Sorry, you don't have enough permissions for doing this"
@@ -222,14 +222,14 @@ object CommandImpl extends Repository with Context {
     }.getOrElse(s"Can't find such poll 👻. Maybe it doesn't exist?")
   }
 
-  def addAnswerOpen(id:Int, answer:String, user: User): String = {
+  def addAnswerOpen(id: Int, answer: String, user: User): String = {
     getContextById(user.id).map(cont => {
       val poll = getPollByIdOption(cont).get
       if (poll.questions(id).voitedUsers.contains(user))
         return s"Hey, you can't vote twice! 🇷🇺"
       if (poll.questions(id).typeOfQuestion != "open")
         return s"😤 Nah, this is a *${poll.questions(id).typeOfQuestion}* question"
-      val b = QuestionHandler.addAnswer(poll.questions(id),poll.anonymity, 0, Answer(answer,Option(user)))
+      val b = QuestionHandler.addAnswer(poll.questions(id), poll.anonymity, 0, Answer(answer, Option(user)))
       val a = PollCommand.updateQuestion(poll, id, b)
       putInRep(cont, a)
       "✔ Thank you for voting"
@@ -237,20 +237,38 @@ object CommandImpl extends Repository with Context {
     }).getOrElse(s"Ah, you probably forgot to /begin 😌")
   }
 
-  def addAnswerChoice(id:Int, list: List[Int], user: User): String = {
+  def addAnswerChoice(id: Int, list: List[Int], user: User): String = {
     getContextById(user.id).map(cont => {
-      for(i <- list) yield {
+      for (i <- list) yield {
         val poll = getPollByIdOption(cont).get
         if (poll.questions(id).voitedUsers.contains(user))
           return s"Hey, you can't vote twice! 🇷🇺"
-        if (poll.questions(id).typeOfQuestion == "choice" && list.size>1)
+        if (poll.questions(id).typeOfQuestion == "choice" && list.size > 1)
           return s"😤 Nah, this is a *${poll.questions(id).typeOfQuestion}* question." +
             s"You can take only 1️⃣ option"
-        val b = QuestionHandler.addAnswer(poll.questions(id),poll.anonymity,  i, Answer("",Option(user)))
+        val b = QuestionHandler.addAnswer(poll.questions(id), poll.anonymity, i, Answer("", Option(user)))
         val a = PollCommand.updateQuestion(poll, id, b)
         putInRep(cont, a)
       }
       "✔ Thank you for voting"
     }).getOrElse(s"Ah, you probably forgot to /begin 😌")
   }
+
+  def printHelp(): String = {
+    return s"👾 *Available commands:*" +
+      s"\n/create\\_poll - create new poll" +
+      s"\n/list - list current polls" +
+      s"\n/delete\\_poll - delete poll" +
+      s"\n/start\\_poll - start poll" +
+      s"\n/stop\\_poll - stop poll" +
+      s"\n/result - view poll results" +
+      s"\n/begin - start working with poll" +
+      s"\n\n👾 After */begin*, these commands will be available: 👇" +
+      s"\n/view - view all poll questions" +
+      s"\n/add\\_question - add question to the poll" +
+      s"\n/delete\\_question - delete question" +
+      s"\n/answer - answer to the question" +
+      s"\n/end - leave current poll"
+  }
+
 }

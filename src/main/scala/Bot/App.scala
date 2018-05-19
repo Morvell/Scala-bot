@@ -22,20 +22,7 @@ object App {
       case c: Matcher.AnswerStringM => CommandImpl.addAnswerOpen(c.d,c.a, user)
       case c: Matcher.AnswerDigitM => CommandImpl.addAnswerChoice(c.d,c.a, user)
       case c: Matcher.ViewM => CommandImpl.view(user)
-      case c: Matcher.PrintHelpM => s"👾 *Available commands:*" +
-        s"\n/create\\_poll - create new poll" +
-        s"\n/list - list current polls" +
-        s"\n/delete\\_poll - delete poll" +
-        s"\n/start\\_poll - start poll" +
-        s"\n/stop\\_poll - stop poll" +
-        s"\n/result - view poll results" +
-        s"\n/begin - start working with poll" +
-        s"\n\n👾 After */begin*, these commands will be available: 👇" +
-        s"\n/view - view all poll questions" +
-        s"\n/add\\_question - add question to the poll" +
-        s"\n/delete\\_question - delete question" +
-        s"\n/answer - answer to the question" +
-        s"\n/end - leave current poll"
+      case c: Matcher.PrintHelpM => CommandImpl.printHelp()
     } match {
       case CommandParser.Success(response, _) => response.toString
       case CommandParser.Failure(text, _) =>
