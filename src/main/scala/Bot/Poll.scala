@@ -16,7 +16,7 @@ object PollCommand {
   def addQuestion(poll: Poll, q:Question): Poll = poll.copy(questions = poll.questions :+ q)
 
   def updateQuestion(poll: Poll, id:Int, q:Question): Poll =
-    poll.copy(questions = poll.questions.updated(id,q))
+    poll.copy(questions = poll.questions.updated(id, q))
 
   def deleteQuestion(poll: Poll, q:Question) : Poll =
     poll.copy(questions = poll.questions.filter(_ != q))
