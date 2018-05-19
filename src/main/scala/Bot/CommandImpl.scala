@@ -123,10 +123,14 @@ object CommandImpl extends Repository with Context {
     getPollById(id).map(poll => PollCommand.getResult(poll, new Date)).merge
 
   def begin(id: Int, user: User): String =
-    getPollById(id).map(_ => {
-      setContext(user.id, id)
-      Answers.afterBeginHint
-    }).merge
+    getPollById(id).map(_ =>
+      if (context.get(user.id).contains(id))
+        Answers.youAlreadySelectedThisPoll
+      else {
+        setContext(user.id, id)
+        Answers.afterBeginHint
+      }
+    ).merge
 
   def end(user: User): String =
     getContextById(user.id).map(pollId => {
@@ -169,7 +173,8 @@ object CommandImpl extends Repository with Context {
   def addAnswerChoice(questionId: Int, list: List[Int], user: User): String =
     getQuestionForUser(questionId, user).map {
       case (poll, question) =>
-        if (question.typeOfQuestion == "choice" && list.size > 1)
+        if ((question.typeOfQuestion == "choice" && list.size != 1) || list.isEmpty ||
+          question.typeOfQuestion == "open")
           Answers.badQuestionType(question.typeOfQuestion)
         else {
           for (i <- list) yield {

@@ -11,6 +11,7 @@ object Answers {
     val pollStrings = polls.map(poll => s"*${poll.id})* ${poll.name}")
     s"👉 Current polls:\n${pollStrings.mkString("\n")}"
   }
+  def youAlreadySelectedThisPoll = s"You have already selected this poll 🧐"
   def pollWasDeleted = s"Poll was deleted successfully 😈"
   def pollIsRunning = s"👌 Poll is running"
   def pollWasStarted = s"🤘 Poll was started"
