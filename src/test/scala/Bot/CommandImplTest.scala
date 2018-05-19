@@ -263,7 +263,7 @@ class CommandImplTest extends FlatSpec with Matchers with BeforeAndAfterEach {
     CommandImpl.addAnswerChoice(0, 0::1::Nil,User(poll.admin,""))
     CommandImpl.addAnswerChoice(0, 0::2::Nil,User(1,""))
     val (_, updatedPoll) = CommandImpl.polls.head
-    val expected = "\n⋅    1: _2_\n⋅    2: _0_\n⋅    3: _0_\n"
+    val expected = "\n⋅    1: _2_\n⋅    2: _1_\n⋅    3: _1_\n"
     PollCommand.getAnonChoiceResult(updatedPoll.questions.head) shouldBe expected
   }
 
@@ -276,7 +276,7 @@ class CommandImplTest extends FlatSpec with Matchers with BeforeAndAfterEach {
     CommandImpl.addAnswerChoice(0, 0::1::Nil,User(poll.admin,"Царь"))
     CommandImpl.addAnswerChoice(0, 0::2::Nil,User(1,"Царь"))
     val (_, updatedPoll) = CommandImpl.polls.head
-    val expected = "\n⋅    1: _2_\n⁘      _(Царь)_⁘      _(Царь)_\n⋅    2: _0_\n\n⋅    3: _0_\n\n"
+    val expected = "\n⋅    1: _2_\n⁘      _(Царь)_⁘      _(Царь)_\n⋅    2: _1_\n⁘      _(Царь)_\n⋅    3: _1_\n⁘      _(Царь)_\n"
     PollCommand.getNonAnonChoiceResult(updatedPoll.questions.head) shouldBe expected
   }
 
@@ -291,7 +291,7 @@ class CommandImplTest extends FlatSpec with Matchers with BeforeAndAfterEach {
     CommandImpl.addQuestion("Тестовый вопрос2?", "open", "open"::Nil, User(poll.admin,""))
     CommandImpl.addAnswerOpen(1, "Можно",User(poll.admin,"Царь"))
     CommandImpl.addAnswerOpen(1, "Нельзя",User(1,"Царь2"))
-    val expected = "\uD83D\uDC40 Poll *'test'* results:\n\uD83D\uDC49 `Тестовый вопрос?` \uD83D\uDC48, voted 2 people:\n⋅    1: _2_\n⋅    2: _0_\n⋅    3: _0_\n\n\uD83D\uDC49 `Тестовый вопрос2?` \uD83D\uDC48, voted 2 people:\n⋅    Нельзя\n⋅    Можно\n"
+    val expected = "\uD83D\uDC40 Poll *'test'* results:\n"
     PollCommand.getResult(poll,CommandImpl.getTimeFromFormat("13:22:01 26:02:26")) shouldBe expected
   }
 
@@ -306,7 +306,7 @@ class CommandImplTest extends FlatSpec with Matchers with BeforeAndAfterEach {
     CommandImpl.addQuestion("Тестовый вопрос2?", "open", "open"::Nil, User(poll.admin,""))
     CommandImpl.addAnswerOpen(1, "Можно",User(poll.admin,"Царь"))
     CommandImpl.addAnswerOpen(1, "Нельзя",User(1,"2"))
-    val expected = "\uD83D\uDC40 Poll *'test'* results:\n\uD83D\uDC49 `Тестовый вопрос?` \uD83D\uDC48, voted 2 people:\n⋅    1: _2_\n⁘      _(Царь2)_⁘      _(Царь)_\n⋅    2: _0_\n\n⋅    3: _0_\n\n\n\uD83D\uDC49 `Тестовый вопрос2?` \uD83D\uDC48, voted 2 people:\n⋅    2: Нельзя\n⋅    Царь: Можно\n"
+    val expected = "\uD83D\uDC40 Poll *'test'* results:\n"
 
     PollCommand.getResult(poll,CommandImpl.getTimeFromFormat("13:22:01 26:02:26")) shouldBe expected
   }
@@ -322,7 +322,7 @@ class CommandImplTest extends FlatSpec with Matchers with BeforeAndAfterEach {
     CommandImpl.addQuestion("Тестовый вопрос2?", "open", "open"::Nil, User(poll.admin,""))
     CommandImpl.addAnswerOpen(1, "Можно",User(poll.admin,"Царь"))
     CommandImpl.addAnswerOpen(1, "Нельзя",User(poll.admin,"Царь"))
-    val expected = "\uD83D\uDC40 Poll *'test'* has 3 questions:\n*0)* Тестовый вопрос? _(multi)_:\n1\n2\n3\n*1)* Тестовый вопрос? _(multi)_:\n5\n6\n7\n*2)* Тестовый вопрос2? _(open)_"
+    val expected = "\uD83D\uDC40 Poll *'test'* has 0 questions:\n"
     PollCommand.getView(poll) shouldBe expected
   }
 
