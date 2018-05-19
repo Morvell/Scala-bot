@@ -8,14 +8,14 @@ class CommandParser extends RegexParsers {
   private val command = CommandImpl
 
   def createPoll: Parser[Command] = {
-    val pollName = Parser("((" ~> """\w+""".r <~ "))" | """\w+""".r) //TODO () ACCEPT
+    val pollName = Parser("(" ~> """[_a-zA-Zа-яА-ЯёЁ0-9.,:;'"*&!? ]+""".r <~ ")")
     val anonymity = Parser("(" ~> ("yes" | "no") <~ ")")
     val continuous = Parser("(" ~> ("afterstop" | "continuous") <~ ")")
     val startTime = Parser("(" ~> """\d{2}:\d{2}:\d{2} \d{2}:\d{2}:\d{2}""".r <~ ")")
     val stopTime = startTime
 
-    ("/create_poll" ~> "(" ~> pollName <~ ")") ~ anonymity.? ~ continuous.? ~ startTime.? ~ stopTime.? ^^
-      { case name ~ anon ~ cont ~ start ~ stop => Matcher.CreatePollM(name, anon, cont, start, stop) } //TODO case ~ ACCEPT
+    "/create_poll" ~> pollName ~ anonymity.? ~ continuous.? ~ startTime.? ~ stopTime.? ^^
+      { case name ~ anon ~ cont ~ start ~ stop => Matcher.CreatePollM(name, anon, cont, start, stop) }
   }
 
   def list: Parser[Command] = """^/list""".r ^^ { _ => Matcher.ListM() }
