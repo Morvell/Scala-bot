@@ -24,10 +24,18 @@ trait Repository {
       if (poll.admin == userId) Right(poll) else Left(Answers.noPermissions))
   }
 
-  def getQuestionForUser(questionId: Int, userId: Long): Either[String, (Poll, Question)] =
-    getContextById(userId).flatMap(getPollById).flatMap(poll =>
-      if (questionId < 0 || questionId >= poll.questions.size) Left(Answers.noSuchQuestion)
-      else Right((poll, poll.questions(questionId))))
+  def getQuestionForUser(questionId: Int, user: User): Either[String, (Poll, Question)] =
+    getContextById(user.id).flatMap(getPollById).flatMap(poll => {
+      if (questionId < 0 || questionId >= poll.questions.size)
+        Left(Answers.noSuchQuestion)
+      else {
+        val question = poll.questions(questionId)
+        if (question.votedUsers.contains(user))
+          Left(Answers.cantVoteTwice)
+        else
+          Right((poll, question))
+      }
+    })
 }
 
 trait Context {
@@ -115,10 +123,14 @@ object CommandImpl extends Repository with Context {
     getPollById(id).map(poll => PollCommand.getResult(poll, new Date)).merge
 
   def begin(id: Int, user: User): String =
-    getPollById(id).map(_ => {
-      setContext(user.id, id)
-      Answers.afterBeginHint
-    }).merge
+    getPollById(id).map(_ =>
+      if (context.get(user.id).contains(id))
+        Answers.youAlreadySelectedThisPoll
+      else {
+        setContext(user.id, id)
+        Answers.afterBeginHint
+      }
+    ).merge
 
   def end(user: User): String =
     getContextById(user.id).map(pollId => {
@@ -139,41 +151,40 @@ object CommandImpl extends Repository with Context {
       }).merge
 
   def deleteQuestion(questionId: Int, user: User): String =
-    getQuestionForUser(questionId, user.id).map {
+    getQuestionForUser(questionId, user).map {
       case (poll, _) =>
         updatePoll(poll.id, PollCommand.deleteQuestionById(poll, questionId))
         Answers.questionWasDeleted
     }.merge
 
   def addAnswerOpen(questionId: Int, answer: String, user: User): String =
-    getQuestionForUser(questionId, user.id).map {
+    getQuestionForUser(questionId, user).map {
       case (poll, question) =>
-        if (question.votedUsers.contains(user))
-          Answers.cantVoteTwice
-        else if (question.typeOfQuestion != "open")
+        if (question.typeOfQuestion != "open")
           Answers.badQuestionType(question.typeOfQuestion)
         else {
           val updatedQuestion = QuestionHandler.addAnswer(poll.questions(questionId),
             poll.anonymity, 0, Answer(answer, Some(user)))
-          updatePoll(poll.id, PollCommand.updateQuestion(poll, questionId, updatedQuestion))
+          updatePoll(poll.id, PollCommand.updateQuestion(polls(poll.id), questionId, updatedQuestion))
           Answers.thanksForVoting
         }
     }.merge
 
   def addAnswerChoice(questionId: Int, list: List[Int], user: User): String =
-    getQuestionForUser(questionId, user.id).map {
+    getQuestionForUser(questionId, user).map {
       case (poll, question) =>
-        if (question.votedUsers.contains(user))
-          Answers.cantVoteTwice
-        else if (question.typeOfQuestion == "choice" && list.size > 1)
+        if ((question.typeOfQuestion == "choice" && list.size != 1) || list.isEmpty ||
+          question.typeOfQuestion == "open")
           Answers.badQuestionType(question.typeOfQuestion)
         else {
           for (i <- list) yield {
-            val updatedQuestion = QuestionHandler.addAnswerMulti(question, poll.anonymity, i, Answer("", Option(user)))
-            updatePoll(poll.id, PollCommand.updateQuestion(poll, questionId, updatedQuestion))
+            val updatedQuestion = QuestionHandler.addAnswerMulti(polls(poll.id).questions(questionId),
+              poll.anonymity, i, Answer("", Option(user)))
+            updatePoll(poll.id, PollCommand.updateQuestion(polls(poll.id), questionId, updatedQuestion))
           }
-          val updatedQuestion = QuestionHandler.addVotedUser(question, Answer("", Option(user)))
-          updatePoll(poll.id, PollCommand.updateQuestion(poll, questionId, updatedQuestion))
+          val updatedQuestion = QuestionHandler.addVotedUser(polls(poll.id).questions(questionId),
+            Answer("", Option(user)))
+          updatePoll(poll.id, PollCommand.updateQuestion(polls(poll.id), questionId, updatedQuestion))
           Answers.thanksForVoting
         }
     }.merge

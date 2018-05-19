@@ -61,23 +61,19 @@ class CommandParser extends RegexParsers {
     command~otvet ^^ { case a~b => Matcher.AnswerStringM(a.toInt, b)}
   }
 
-  def answerChoice: Parser[Command] = {
-    val digit = Parser("(" ~> """\d+""".r <~ ")")
-    val command = Parser("/answer" ~> digit)
-    command~digit ^^ { case a~b => Matcher.AnswerDigitM(a.toInt, b.toInt::Nil)}
-  }
-
   def answerMulti: Parser[Command] = {
     val digit = Parser("(" ~> """\d+""".r <~ ")")
-    val variant = Parser("\n" ~> """\d+""".r )
+    val variant = Parser("""\d+""".r)
     val command = Parser("/answer" ~> digit)
-    command~rep(variant) ^^ { case a~b => Matcher.AnswerDigitM(a.toInt, b.map(_.toInt))}
+    command~rep(variant) ^^ { case a~b =>
+      println(a, b)
+      Matcher.AnswerDigitM(a.toInt, b.map(_.toInt))}
   }
 
   val rlt: Parser[Command] = createPoll | list | delete | start | stop | result |
-    begin | end |view | answerOpen | deleteQuestion | addQuestionChoice | addQuestionOpen |
-    answerChoice | answerMulti | help | failure(s"Oops, I don't know this command 🤔. Try typing /help")
-
+    begin | end | view | answerOpen | answerMulti |
+    deleteQuestion | addQuestionOpen | addQuestionChoice |
+    help | failure(s"Oops, I don't know this command 🤔. Try typing /help")
 
   def apply(input: String): ParseResult[Command] = parse(rlt, input)
 }
