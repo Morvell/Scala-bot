@@ -36,20 +36,14 @@ object QuestionHandler {
 
   }
 
-  def addAnswerMulti(question: Question, anonymity: Boolean, id: Int, answer: Answer): Question = {
-    anonymity match {
-      case false => {
-        val a = question.variants(id).copy(answers = answer :: question.variants(id).answers)
-        question.copy(variants = question.variants.updated(id, a))
-
-      }
-      case true => {
-        val a = question.variants(id).copy(answers = answer.copy(user = None) :: question.variants(id).answers)
-        question.copy(variants = question.variants.updated(id, a))
-      }
+  def addAnswerMulti(question: Question, anonymity: Boolean, id: Int, answer: Answer): Question =
+    if (anonymity) {
+      val a = question.variants(id).copy(answers = answer.copy(user = None) :: question.variants(id).answers)
+      question.copy(variants = question.variants.updated(id, a))
+    } else {
+      val a = question.variants(id).copy(answers = answer :: question.variants(id).answers)
+      question.copy(variants = question.variants.updated(id, a))
     }
-
-  }
 
   def addInVoitedUser(question: Question, answer: Answer): Question = {
     question.copy(voitedUsers = question.voitedUsers + answer.user.get)
