@@ -51,6 +51,7 @@ trait Context {
   }
 
   def getContextById(id: Long): Option[Int] = {
+    if (!context.contains(id)) return None
     context(id)
   }
 
@@ -189,8 +190,8 @@ object CommandImpl extends Repository with Context {
 
   def end(user: User): String = {
     getContextById(user.id).map { id =>
-      setContext(id, None)
-      s"🤓 You can try typing */result ($id)*"
+      removeContext(user.id)
+      s"This is end"
     }.getOrElse(s"Ah, you probably forgot to /begin 😌")
   }
 
@@ -246,10 +247,12 @@ object CommandImpl extends Repository with Context {
         if (poll.questions(id).typeOfQuestion == "choice" && list.size > 1)
           return s"😤 Nah, this is a *${poll.questions(id).typeOfQuestion}* question." +
             s"You can take only 1️⃣ option"
-        val b = QuestionHandler.addAnswer(poll.questions(id), poll.anonymity, i, Answer("", Option(user)))
+        val b = QuestionHandler.addAnswerMulti(poll.questions(id), poll.anonymity, i, Answer("", Option(user)))
         val a = PollCommand.updateQuestion(poll, id, b)
         putInRep(cont, a)
       }
+      val a = PollCommand.updateQuestion(getPollByIdOption(cont).get, id, QuestionHandler.addInVoitedUser(getPollByIdOption(cont).get.questions(id), Answer("", Option(user))))
+      putInRep(cont, a)
       "✔ Thank you for voting"
     }).getOrElse(s"Ah, you probably forgot to /begin 😌")
   }
