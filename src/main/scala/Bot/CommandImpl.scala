@@ -8,7 +8,7 @@ import scala.collection.immutable.HashSet
 
 
 trait Repository {
-  var polls: Map[Int, Poll] = immutable.Map[Int, Poll]()
+  private var polls: Map[Int, Poll] = immutable.Map[Int, Poll]()
 
   def putInRep(id: Int, poll: Poll) {
     polls = polls + (id -> poll)
@@ -33,18 +33,37 @@ trait Repository {
   }
 }
 
-case class Context(context:Option[Int])
+trait Context {
+  private var context: Map[Long, Option[Int]] = immutable.Map[Long, Option[Int]]()
 
-object CommandImpl extends Repository {
+  def setContext(id: Long, cont: Option[Int]) {
+    context = context + (id -> cont)
+  }
 
+  def getAllContexts: Map[Long, Option[Int]] = context
+
+  def removeContext(id: Long) {
+    context = context - id
+  }
+
+  def cleanAllContext() {
+    context = context.empty
+  }
+
+  def getContextById(id: Long): Option[Int] = {
+    context(id)
+  }
+
+}
+
+
+object CommandImpl extends Repository with Context {
 
   val formatDate = new SimpleDateFormat("hh:mm:ss yy:MM:dd")
 
   val maxId = Stream.from(0).iterator
 
-  val userID = Stream.from(0).iterator //TODO временно
-
-  var context:Option[Int] = None
+  val userID = Stream.from(0).iterator
 
   def getMaxID: Int = {
     maxId.next()
@@ -156,10 +175,10 @@ object CommandImpl extends Repository {
     }.getOrElse(s"Can't find such poll 👻. Maybe it doesn't exist?")
   }
 
-  def begin(id: Int): String = {
+  def begin(id: Int, user: User): String = {
     if (!getRep.contains(id))
       return s"Can't find such poll 👻. Maybe it doesn't exist?"
-    context = Option(id)
+    setContext(user.id, Option(id))
     s"🤓 Okay, now you can:" +
       s"\n/add\\_question _(<question>)_ _(open|choice|multi)_," +
       s"\n/delete\\_question _(<question number>)_," +
@@ -168,43 +187,43 @@ object CommandImpl extends Repository {
       s"\nAnd don't forget to /end 😉"
   }
 
-  def end(): String = {
-    context.map { id =>
-      context = None
+  def end(user: User): String = {
+    getContextById(user.id).map { id =>
+      setContext(id, None)
       s"🤓 You can try typing */result ($id)*"
     }.getOrElse(s"Ah, you probably forgot to /begin 😌")
   }
 
-  def view(): String = {
-    getPollByIdOption(context.getOrElse(return s"Ah, you probably forgot to /begin 😌")).map { poll =>
+  def view(uset: User): String = {
+    getPollByIdOption(getContextById(uset.id).getOrElse(return s"Ah, you probably forgot to /begin 😌")).map { poll =>
       PollCommand.getView(poll)
 
     }.getOrElse(s"Can't find such poll 👻. Maybe it doesn't exist?")
   }
 
   def addQuestion(name: String, typeOfQuestion: String, list: List[String], userIDE:User): String = {
-    getPollByIdOption(context.getOrElse(return s"Ah, you probably forgot to /begin 😌")).map { poll =>
+    getPollByIdOption(getContextById(userIDE.id).getOrElse(return s"Ah, you probably forgot to /begin 😌")).map { poll =>
       if (!checkRoot(poll, userIDE.id))
         return s"😟 Sorry, you don't have enough permissions for doing this"
       val question = Question(name,typeOfQuestion, HashSet[User](),list.map(e => Variant(e, Nil)))
-      putInRep(context.get, PollCommand.addQuestion(poll, question))
+      putInRep(getContextById(userIDE.id).get, PollCommand.addQuestion(poll, question))
       s"👌 Question _'$name'_ was added *(${poll.questions.size})*"
 
     }.getOrElse(s"Can't find such poll 👻. Maybe it doesn't exist?")
   }
 
   def deleteQuestion(id:Int, userIDE:User): String = {
-    getPollByIdOption(context.getOrElse(return s"Ah, you probably forgot to /begin 😌")).map { poll =>
+    getPollByIdOption(getContextById(userIDE.id).getOrElse(return s"Ah, you probably forgot to /begin 😌")).map { poll =>
       if (!checkRoot(poll, userIDE.id))
         return s"😟 Sorry, you don't have enough permissions for doing this"
-      putInRep(context.get, PollCommand.deleteQuestionById(poll,id))
+      putInRep(getContextById(userIDE.id).get, PollCommand.deleteQuestionById(poll, id))
       s"🤞 Question was deleted"
 
     }.getOrElse(s"Can't find such poll 👻. Maybe it doesn't exist?")
   }
 
   def addAnswerOpen(id:Int, answer:String, user: User): String = {
-    context.map(cont => {
+    getContextById(user.id).map(cont => {
       val poll = getPollByIdOption(cont).get
       if (poll.questions(id).voitedUsers.contains(user))
         return s"Hey, you can't vote twice! 🇷🇺"
@@ -219,7 +238,7 @@ object CommandImpl extends Repository {
   }
 
   def addAnswerChoice(id:Int, list: List[Int], user: User): String = {
-    context.map(cont => {
+    getContextById(user.id).map(cont => {
       for(i <- list) yield {
         val poll = getPollByIdOption(cont).get
         if (poll.questions(id).voitedUsers.contains(user))
