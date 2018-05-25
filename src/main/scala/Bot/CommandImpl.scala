@@ -98,12 +98,14 @@ object CommandImpl extends Repository with Context {
 
   def startPoll(id: Int, date: Date, user: User): String =
     getPollForUser(id, user.id).map(poll => {
-      if (PollCommand.active(poll, date) || poll.start_time.isDefined) {
+      if (PollCommand.pollCanNotBeStarted(poll, date)) {
+        Answers.cantStartPoll(id)
+      } else if (PollCommand.active(poll, date) || poll.start_time.isDefined) {
         Answers.pollIsRunning
-      } else if (poll.start_time.isEmpty) {
+      } else {
         updatePoll(id, PollCommand.start(poll, date))
         Answers.pollWasStarted
-      } else Answers.cantStartPoll(id)
+      }
     }).merge
 
   def stopPoll(id: Int, date: Date, user: User): String =
@@ -162,6 +164,7 @@ object CommandImpl extends Repository with Context {
       case (poll, question) =>
         if (question.typeOfQuestion != "open")
           Answers.badQuestionType(question.typeOfQuestion)
+        else if (!PollCommand.active(poll)) Answers.pollIsNotActive
         else {
           val updatedQuestion = QuestionHandler.addAnswer(poll.questions(questionId),
             poll.anonymity, 0, Answer(answer, Some(user)))
@@ -176,6 +179,7 @@ object CommandImpl extends Repository with Context {
         if ((question.typeOfQuestion == "choice" && list.size != 1) || list.isEmpty ||
           question.typeOfQuestion == "open")
           Answers.badQuestionType(question.typeOfQuestion)
+        else if (!PollCommand.active(poll)) Answers.pollIsNotActive
         else {
           for (i <- list) yield {
             val updatedQuestion = QuestionHandler.addAnswerMulti(polls(poll.id).questions(questionId),

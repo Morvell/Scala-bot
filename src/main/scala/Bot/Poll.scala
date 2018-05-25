@@ -24,13 +24,14 @@ object PollCommand {
   def deleteQuestionById(poll: Poll, id:Int) : Poll =
     deleteQuestion(poll, poll.questions(id))
 
-  def active(poll: Poll, date: Date): Boolean =
-    if(poll.start_time.isEmpty) false
+  def pollCanNotBeStarted(poll: Poll, date: Date): Boolean =
+    poll.end_time.exists(d => d.before(date))
+
+  def active(poll: Poll, date: Date = new Date()): Boolean =
+    if (poll.start_time.isEmpty) false
     else {
       val t = poll.end_time.getOrElse(new Date())
-      val a1 = t.after(date)
-      val a2 = poll.start_time.get.before(date)
-      a1 && a2
+      t.compareTo(date) >= 0 && poll.start_time.get.before(date)
     }
 
   def start(poll: Poll, date: Date): Poll =
