@@ -15,7 +15,7 @@ object Answers {
   def pollWasDeleted = s"Poll was deleted successfully 😈"
   def pollIsRunning = s"👌 Poll is running"
   def pollWasStarted = s"🤘 Poll was started"
-  def cantStartPoll(id: Int) = s"Can't start poll *$id* for some reason 😕"
+  def cantStartPoll(id: Int) = s"Can't start poll *$id* again 😕"
   def pollIsNotActive = s"Poll isn't active 😤. Be patient."
   def pollIsStopped = s"Poll is stopped ⛔"
   def pollWillStartAutomatically = s"Don't worry, poll will stop automatically 😉"
